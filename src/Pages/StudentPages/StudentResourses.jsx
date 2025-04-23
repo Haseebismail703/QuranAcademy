@@ -20,10 +20,6 @@ const dummyResources = [
 const StudentResourses = () => {
     const [resources, setResources] = useState(dummyResources);
 
-    const handleDelete = (id) => {
-        setResources(resources.filter((res) => res.id !== id));
-        message.success("Resource deleted!");
-    };
 
     return (
         <div className="min-h-screen p-6 bg-gray-50">
@@ -39,17 +35,10 @@ const StudentResourses = () => {
                         title={res.title}
                     >
                         <p className="mb-4 text-gray-600 truncate">{res.fileName}</p>
-                        <div className="flex justify-between">
+                        <div className="flex justify-center">
                             <a href={res.fileUrl} download={res.fileName}>
                                 <Button icon={<DownloadOutlined />} type="primary">Download</Button>
                             </a>
-                            <Button
-                                danger
-                                icon={<DeleteOutlined />}
-                                onClick={() => handleDelete(res.id)}
-                            >
-                                Delete
-                            </Button>
                         </div>
                     </Card>
                 ))}
