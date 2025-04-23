@@ -21,10 +21,14 @@ import Contact from './Pages/HomePages/Contact.jsx'
 import QuranMemorization from './Pages/HomePages/QuranMemorization.jsx'
 import QuranCourseForKids from './Pages/HomePages/QuranCourseForKids.jsx'
 import LearnQuran from './Pages/HomePages/LearnQuran.jsx'
-
+import StudentLayout from "./Components/StudentComponent/StudentLayout.jsx";
+import StudentDashboard from './Pages/StudentPages/StudentDashboard.jsx'
+import StudentClass from './Pages/StudentPages/StudenrClass.jsx'
 // auth
 import Login from './Pages/StudentPages/Login.jsx'
 import Register from './Pages/StudentPages/Register.jsx'
+import StudentResourses from "./Pages/StudentPages/StudentResourses.jsx";
+import StudentFee from "./Pages/StudentPages/StudentFee.jsx";
 
 // Lazy load components
 const Home = lazy(() => import("./Pages/HomePages/Home.jsx"));
@@ -44,12 +48,12 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
           <Route path="/basic-quran-reading" element={<BasicQuranReading />} />
-          <Route path="/contact" element={<Contact />} />     
+          <Route path="/contact" element={<Contact />} />
           <Route path="/quran-memorization-hifz" element={<QuranMemorization />} />
           <Route path="/quran-course-for-kids" element={<QuranCourseForKids />} />
           <Route path="/learn-islamic-concepts" element={<LearnQuran />} />
 
-          
+
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
@@ -80,13 +84,30 @@ function App() {
               <TeacherLayout>
                 <Routes>
                   <Route path="dashboard" element={<TeacherDashboard />} />
-                  <Route path="class" element={<Class/>} />
-                  <Route path='class/add-resourse/:classId' element={<AddResources/>} />
-                  <Route path='class/send-notification/:classId' element={<TeacherNotification/>} />
-                  <Route path='class/enrolled-student/:classId' element={<EnrolledStudent/>} />
-                  <Route path="class/mark-attendence/:classId" element={<MarkAttendence/>}  />
+                  <Route path="class" element={<Class />} />
+                  <Route path='class/add-resourse/:classId' element={<AddResources />} />
+                  <Route path='class/send-notification/:classId' element={<TeacherNotification />} />
+                  <Route path='class/enrolled-student/:classId' element={<EnrolledStudent />} />
+                  <Route path="class/mark-attendence/:classId" element={<MarkAttendence />} />
                 </Routes>
               </TeacherLayout>
+            }
+          />
+
+          {/* student Routes */}
+          <Route
+            path="/student/*"
+            element={
+              <StudentLayout>
+                <Routes>
+                  <Route path="dashboard" element={<StudentDashboard />} />
+                  <Route path="class" element={<StudentClass />} />
+                  <Route path="class/resourses/:classId" element={<StudentResourses />} />
+                  <Route path="fee" element={<StudentFee />} />
+
+
+                </Routes>
+              </StudentLayout>
             }
           />
 

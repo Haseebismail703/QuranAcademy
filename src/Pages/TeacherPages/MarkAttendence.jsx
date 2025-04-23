@@ -1,27 +1,23 @@
 import React, { useState } from "react";
-import { Table, Switch, Card, DatePicker, Button, message } from "antd";
+import { Table, DatePicker, Card, Space } from "antd";
+import { CheckCircleTwoTone, CloseCircleTwoTone, UserAddOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 const initialStudents = [
-  { id: 1, name: "Ali Raza", email: "ali@gmail.com", present: false },
-  { id: 2, name: "Sara Khan", email: "sara@gmail.com", present: false },
-  { id: 3, name: "Ahmed Noor", email: "ahmed@gmail.com", present: false },
+  { id: 1, name: "Ali Raza", email: "ali@gmail.com", course: "React JS", present: false },
+  { id: 2, name: "Sara Khan", email: "sara@gmail.com", course: "Node JS", present: false },
+  { id: 3, name: "Ahmed Noor", email: "ahmed@gmail.com", course: "Python", present: false },
 ];
 
-const Attendence = () => {
+const Attendance = () => {
   const [students, setStudents] = useState(initialStudents);
   const [date, setDate] = useState(dayjs());
 
-  const handleToggle = (id, checked) => {
+  const markAttendance = (id, status) => {
     const updated = students.map((student) =>
-      student.id === id ? { ...student, present: checked } : student
+      student.id === id ? { ...student, present: status } : student
     );
     setStudents(updated);
-  };
-
-  const handleSubmit = () => {
-    const presentList = students.filter((s) => s.present);
-    message.success(`${presentList.length} students marked present`);
   };
 
   const columns = [
@@ -30,22 +26,45 @@ const Attendence = () => {
       dataIndex: "name",
       key: "name",
       render: (text) => <span className="font-semibold">{text}</span>,
+      filters: [
+        ...new Set(initialStudents.map((student) => ({ text: student.name, value: student.name }))),
+      ],
+      onFilter: (value, record) => record.name.includes(value),
     },
     {
       title: "Email",
       dataIndex: "email",
       key: "email",
+      filters: [
+        ...new Set(initialStudents.map((student) => ({ text: student.email, value: student.email }))),
+      ],
+      onFilter: (value, record) => record.email.includes(value),
     },
     {
-      title: "Status",
-      key: "present",
+      title: "Course Name",
+      dataIndex: "course",
+      key: "course",
+    },
+    {
+      title: "Actions",
+      key: "actions",
       render: (_, record) => (
-        <Switch
-          checkedChildren="Present"
-          unCheckedChildren="Absent"
-          checked={record.present}
-          onChange={(checked) => handleToggle(record.id, checked)}
-        />
+        <Space>
+          <button
+            type="button"
+            className="text-green-500"
+            onClick={() => markAttendance(record.id, true)}
+          >
+            <CheckCircleTwoTone twoToneColor="#52c41a" /> Present
+          </button>
+          <button
+            type="button"
+            className="text-red-500"
+            onClick={() => markAttendance(record.id, false)}
+          >
+            <CloseCircleTwoTone twoToneColor="#f5222d" /> Absent
+          </button>
+        </Space>
       ),
     },
   ];
@@ -56,7 +75,8 @@ const Attendence = () => {
   return (
     <div className="p-6 min-h-screen bg-gray-50">
       <h2 className="text-3xl font-bold text-blue-700 mb-6 text-center">
-        📝 Attendance Management
+        <UserAddOutlined className="mr-2" />
+        Mark Attendance
       </h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
@@ -65,13 +85,6 @@ const Attendence = () => {
           value={date}
           onChange={(value) => setDate(value)}
         />
-        <Button
-          type="primary"
-          className="bg-blue-600 px-6"
-          onClick={handleSubmit}
-        >
-          Submit Attendance
-        </Button>
       </div>
 
       <Card
@@ -94,4 +107,4 @@ const Attendence = () => {
   );
 };
 
-export default Attendence;
+export default Attendance;
