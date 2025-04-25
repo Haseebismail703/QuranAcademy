@@ -64,7 +64,7 @@ export default function Footer() {
         </div>
 
         <p className="mt-10 pt-6 border-t border-gray-600 text-center text-sm md:text-base">
-          © Copyright 2025 Qurani Academy, All Rights Reserved.
+          © Copyright 2025 Saylani Online Academy, All Rights Reserved.
         </p>
       </div>
     </footer>
