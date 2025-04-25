@@ -16,12 +16,12 @@ const Contact = () => {
 
           <div className="flex-1 bg-gray-100 rounded-lg p-6 border border-gray-300">
             <p className="font-semibold text-gray-700 mb-2">Email:</p>
-            <p className="text-gray-600">info@quraniacademy.com</p>
+            <p className="text-gray-600">info@saylanionlineacademy.com</p>
           </div>
 
           <div className="flex-1 bg-gray-100 rounded-lg p-6 border border-gray-300">
             <p className="font-semibold text-gray-700 mb-2">Phone:</p>
-            <p className="text-gray-600">+44 7477 487302</p>
+            <p className="text-gray-600">+923000652261</p>
           </div>
         </div>
       </div>

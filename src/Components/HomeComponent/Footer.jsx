@@ -56,15 +56,15 @@ export default function Footer() {
             <h3 className="text-xl font-bold mb-4">CONTACT DETAILS</h3>
             <p className="font-bold">Email:</p>
             <p className="text-[#8BC34A] break-words">
-              info@quraniacademy.com
+            info@saylanionlineacademy.com
             </p>
             <p className="font-bold mt-4">Phone:</p>
-            <p className="text-[#8BC34A]">+44 7477 487302</p>
+            <p className="text-[#8BC34A]">+923000652261</p>
           </div>
         </div>
 
         <p className="mt-10 pt-6 border-t border-gray-600 text-center text-sm md:text-base">
-          © Copyright 2023 Qurani Academy, All Rights Reserved.
+          © Copyright 2025 Qurani Academy, All Rights Reserved.
         </p>
       </div>
     </footer>

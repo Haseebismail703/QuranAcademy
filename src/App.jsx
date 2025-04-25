@@ -29,6 +29,7 @@ import Login from './Pages/StudentPages/Login.jsx'
 import Register from './Pages/StudentPages/Register.jsx'
 import StudentResourses from "./Pages/StudentPages/StudentResourses.jsx";
 import StudentFee from "./Pages/StudentPages/StudentFee.jsx";
+import AdminProfile from "./Pages/AdminPages/AdminProfile.jsx";
 
 // Lazy load components
 const Home = lazy(() => import("./Pages/HomePages/Home.jsx"));
@@ -73,6 +74,7 @@ function App() {
                   <Route path="manage-class/add-student/:classId" element={<AddStudent />} />
                   <Route path="manage-package" element={<ManagePackage />} />
                   <Route path="notification" element={<SendNotification />} />
+                  <Route path ="profile" element={<AdminProfile/>}/>
                 </Routes>
               </AdminLayout>
             }

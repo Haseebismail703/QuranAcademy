@@ -198,7 +198,7 @@ const AdminLayout = ({ children }) => {
   const navigate = useNavigate();
   useEffect(() => {
     const currentPath = location.pathname.split("/")[2];
-    const matchedMenuItem = menuItems.find(item => item.label.props.to.includes(currentPath));
+    const matchedMenuItem = menuItems.find(item => item.label.props?.to.includes(currentPath));
     setSelectedKey(matchedMenuItem ? matchedMenuItem.key : "dashboard");
     document.body.style.backgroundColor = "#f4f6f8";
 }, [location.pathname]);
