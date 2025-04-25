@@ -173,7 +173,7 @@ const profileMenu = {
     {
       key: 'profile',
       icon: <UserOutlined />,
-      label: <Link to="/admin/profile">My Profile</Link>,
+      label: <Link to="/teacher/profile">My Profile</Link>,
     },
     {
       key: 'logout',

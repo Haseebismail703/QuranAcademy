@@ -1,67 +1,19 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, Input, Select, Tag, Avatar, Popconfirm, message, Space } from 'antd';
-import { 
-  EditOutlined, 
-  DeleteOutlined, 
-  PlusOutlined, 
+import {
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
   ClockCircleOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined
 } from '@ant-design/icons';
-
+import axiosInstance from '../../Axios/axiosInstance.js'
 const { Option } = Select;
 
 const ManageCourses = () => {
   const [form] = Form.useForm();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
-  const [courses, setCourses] = useState([
-    {
-      id: '1',
-      name: 'Quran Hifz Program',
-      duration: '12 Months',
-      status: 'active',
-      theme: 'blue',
-      students: 24,
-      createdAt: '2023-01-15'
-    },
-    {
-      id: '2',
-      name: 'Tajweed Mastery',
-      duration: '6 Months',
-      status: 'active',
-      theme: 'green',
-      students: 18,
-      createdAt: '2023-02-20'
-    },
-    {
-      id: '3',
-      name: 'Arabic Language',
-      duration: '9 Months',
-      status: 'inactive',
-      theme: 'orange',
-      students: 12,
-      createdAt: '2023-03-10'
-    },
-    {
-      id: '4',
-      name: 'Islamic Studies',
-      duration: '3 Months',
-      status: 'active',
-      theme: 'purple',
-      students: 32,
-      createdAt: '2023-04-05'
-    },
-    {
-      id: '5',
-      name: 'Fiqh Essentials',
-      duration: '4 Months',
-      status: 'active',
-      theme: 'red',
-      students: 15,
-      createdAt: '2023-05-12'
-    }
-  ]);
+  const [courses, setCourses] = useState([]);
 
   const themeOptions = [
     { value: 'blue', label: 'Blue Theme', color: '#3B82F6' },
@@ -71,17 +23,12 @@ const ManageCourses = () => {
     { value: 'red', label: 'Red Theme', color: '#EF4444' },
   ];
 
-  const statusOptions = [
-    { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
-  ];
 
   const durationOptions = [
     { value: '3 Months', label: '3 Months' },
     { value: '6 Months', label: '6 Months' },
     { value: '9 Months', label: '9 Months' },
     { value: '12 Months', label: '12 Months' },
-    { value: 'Custom', label: 'Custom Duration' },
   ];
 
   const showModal = (course = null) => {
@@ -95,29 +42,92 @@ const ManageCourses = () => {
     setIsModalVisible(true);
   };
 
-  const handleOk = () => {
-    form.validateFields().then(values => {
-      if (editingCourse) {
-        // Update existing course
-        setCourses(courses.map(course => 
-          course.id === editingCourse.id ? { ...course, ...values } : course
-        ));
-        message.success('Course updated successfully!');
-      } else {
-        // Add new course
-        const newCourse = {
-          id: (courses.length + 1).toString(),
-          ...values,
-          students: 0,
-          createdAt: new Date().toISOString().split('T')[0]
-        };
-        setCourses([...courses, newCourse]);
-        message.success('Course added successfully!');
+
+
+  const handleOk = async () => {
+  console.log('Form values:', form.getFieldsValue());
+
+  try {
+    const values = await form.validateFields();
+
+    if (editingCourse) {
+      // ✅ Update course
+      // console.log('Editing course:', editingCourse);
+      const response = await axiosInstance.put(`/updateCourseDetails/${editingCourse._id}`, values);
+      console.log('Update response:', response.data);
+
+      if (response.status === 200) {
+        const updatedCourse = response.data.course
+      
+        // 🔁 Find index of course in current state
+        const updatedIndex = courses.findIndex(course => course._id === updatedCourse._id)  ;
+      //  console.log('Updated index:', updatedIndex);
+        if (updatedIndex !== -1) {
+          // ✅ Create new array with updated course
+          const updatedCourses = [...courses];
+          updatedCourses[updatedIndex] = {
+            ...updatedCourse,
+            key: updatedIndex + 1, // add key for table or list
+          };
+      
+          setCourses(updatedCourses);
+          message.success(response.data.message || 'Course updated successfully!');
+        } else {
+          message.error('Course not found in state!');
+        }
       }
-      setIsModalVisible(false);
-      form.resetFields();
-    });
+      
+    } else {
+      // ✅ Create new course
+      const key = courses.length;
+      const dataWithIndex = { ...values, key };
+
+      const response = await axiosInstance.post('/createCourse', dataWithIndex);
+      console.log('Create response:', response.data);
+
+      if (response.status === 200) {
+        const newCourseWithKey = { ...response.data.courseData, key };
+        setCourses([...courses, newCourseWithKey]);
+        message.success(response.data.message || 'Course created successfully!');
+      }
+    }
+
+    setIsModalVisible(false);
+    form.resetFields();
+  } catch (error) {
+    console.error('Error:', error);
+    if (error?.response?.data?.message) {
+      message.error(error.response.data.message);
+    } else if (error instanceof Error) {
+      message.error(error.message || 'Something went wrong!');
+    } else {
+      message.error('Failed to process the form!');
+    }
+  }
+};
+
+
+
+  // get the course data 
+  const getCourses = async () => {
+    try {
+      const response = await axiosInstance.get('/getAllCourses');
+      // console.log('Courses:', response.data?.Courses);
+      let coursesData = response.data?.Courses.map((course, index) => ({
+        ...course,
+        key: index + 1,
+      }));
+      console.log('Courses Data:', coursesData);
+      setCourses(coursesData || []);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      message.error(error.message || 'Failed to fetch courses!');
+    }
   };
+
+  useEffect(() => {
+    getCourses();
+  }, [])
 
   const handleCancel = () => {
     setIsModalVisible(false);
@@ -129,32 +139,29 @@ const ManageCourses = () => {
     message.success('Course deleted successfully!');
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'active':
-        return <CheckCircleOutlined className="text-green-500" />;
-      case 'inactive':
-        return <CloseCircleOutlined className="text-red-500" />;
-      default:
-        return null;
-    }
-  };
+
 
   const columns = [
     {
+      title: 'NO',
+      dataIndex: 'key',
+      key: 'key',
+      render: (_, record) => <span className="font-medium">{record.key}</span>,
+    },
+    {
       title: 'Course Name',
-      dataIndex: 'name',
+      dataIndex: 'courseName',
       key: 'name',
       render: (text, record) => (
         <div className="flex items-center">
-          <Avatar 
-            style={{ 
+          <Avatar
+            style={{
               backgroundColor: themeOptions.find(t => t.value === record.theme)?.color || '#3B82F6',
               color: 'white'
             }}
             className="mr-3"
           >
-            {text.charAt(0)}
+            {text?.charAt(0)}
           </Avatar>
           <span className="font-medium">{text}</span>
         </div>
@@ -177,29 +184,22 @@ const ManageCourses = () => {
       key: 'students',
       render: (students) => (
         <Tag color="blue" className="font-medium">
-          {students} Students
+          {students || '---'} Students
         </Tag>
       ),
     },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (
-        <Tag 
-          color={status === 'active' ? 'green' : 'red'} 
-          className="flex items-center capitalize"
-        >
-          {getStatusIcon(status)}
-          <span className="ml-1">{status}</span>
-        </Tag>
-      ),
-    },
+
     {
       title: 'Created At',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (date) => <span className="text-gray-500">{date}</span>,
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render: (date) => <span className="text-gray-500">{date?.substring(0, 10)}</span>,
+    },
+    {
+      title: 'updated At',
+      dataIndex: 'updated_at',
+      key: 'updated_at',
+      render: (date) => <span className="text-gray-500">{date?.substring(0, 10)}</span>,
     },
     {
       title: 'Action',
@@ -246,11 +246,10 @@ const ManageCourses = () => {
         <Table
           columns={columns}
           dataSource={courses}
-          rowKey="id"
           pagination={{ pageSize: 5 }}
           rowClassName="hover:bg-gray-50"
           className="custom-antd-table"
-          scroll={{"x" : "100%"}}
+          scroll={{ "x": "100%" }}
         />
       </div>
 
@@ -266,7 +265,7 @@ const ManageCourses = () => {
       >
         <Form form={form} layout="vertical" className="mt-6">
           <Form.Item
-            name="name"
+            name="courseName"
             label="Course Name"
             rules={[{ required: true, message: 'Please enter course name' }]}
           >
@@ -296,8 +295,8 @@ const ManageCourses = () => {
               {themeOptions.map(option => (
                 <Option key={option.value} value={option.value}>
                   <div className="flex items-center">
-                    <div 
-                      className="w-4 h-4 rounded-full mr-2" 
+                    <div
+                      className="w-4 h-4 rounded-full mr-2"
                       style={{ backgroundColor: option.color }}
                     />
                     {option.label}
@@ -307,19 +306,7 @@ const ManageCourses = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item
-            name="status"
-            label="Status"
-            rules={[{ required: true, message: 'Please select status' }]}
-          >
-            <Select placeholder="Select status">
-              {statusOptions.map(option => (
-                <Option key={option.value} value={option.value}>
-                  {option.label}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
+
         </Form>
       </Modal>
 

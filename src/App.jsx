@@ -24,6 +24,7 @@ import LearnQuran from './Pages/HomePages/LearnQuran.jsx'
 import StudentLayout from "./Components/StudentComponent/StudentLayout.jsx";
 import StudentDashboard from './Pages/StudentPages/StudentDashboard.jsx'
 import StudentClass from './Pages/StudentPages/StudenrClass.jsx'
+import TeacherProfile from "./Pages/TeacherPages/TeacherProfile.jsx";
 // auth
 import Login from './Pages/StudentPages/Login.jsx'
 import Register from './Pages/StudentPages/Register.jsx'
@@ -91,6 +92,7 @@ function App() {
                   <Route path='class/send-notification/:classId' element={<TeacherNotification />} />
                   <Route path='class/enrolled-student/:classId' element={<EnrolledStudent />} />
                   <Route path="class/mark-attendence/:classId" element={<MarkAttendence />} />
+                  <Route path ="profile" element={<TeacherProfile/>}/>
                 </Routes>
               </TeacherLayout>
             }
