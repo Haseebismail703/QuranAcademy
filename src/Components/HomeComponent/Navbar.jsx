@@ -45,7 +45,6 @@ export default function HomeNavbar() {
               </div>
             </div>
 
-            <Link to="#" className="text-gray-700 hover:text-green-600 font-medium">PACKAGES</Link>
             <Link to="/contact" className="text-gray-700 hover:text-green-600 font-medium">CONTACT US</Link>
             <button
               onClick={() => setIsLoginModalOpen(true)}

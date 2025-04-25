@@ -9,7 +9,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 py-10 md:px-16 lg:px-20 ">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           <div className="flex flex-col justify-between gap-auto items-center sm:items-start w-full h-full">
-            <img
+            <img 
               src="/IMG-20250422-WA0092.jpg"
               alt="Qurani Academy"
               className="bg-white rounded-lg p-4 mb-4 h-24"
