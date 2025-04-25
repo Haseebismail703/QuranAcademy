@@ -2,6 +2,8 @@ import React from "react";
 import { Facebook, Instagram, Linkedin, Twitter } from "lucide-react";
 
 export default function Footer() {
+
+  let date = new Date().getFullYear();
   return (
     <footer className="bg-[#004040] text-white">
       <div className="max-w-7xl mx-auto px-4 py-10 md:px-16 lg:px-20 ">
@@ -42,7 +44,7 @@ export default function Footer() {
           <div className="text-center sm:text-left">
             <h3 className="text-xl font-bold mb-4">QUICK LINKS</h3>
             <ul className="space-y-2">
-              {["HOME", "ABOUT US", "PACKAGES", "CONTACT"].map((link) => (
+              {["HOME", "ABOUT US", "CONTACT"].map((link) => (
                 <li key={link}>
                   <a href="#" className="text-[#8BC34A] hover:underline">
                     {link}
@@ -64,7 +66,7 @@ export default function Footer() {
         </div>
 
         <p className="mt-10 pt-6 border-t border-gray-600 text-center text-sm md:text-base">
-          © Copyright 2025 Saylani Online Academy, All Rights Reserved.
+          © Copyright {date} Saylani Online Academy, All Rights Reserved.
         </p>
       </div>
     </footer>
