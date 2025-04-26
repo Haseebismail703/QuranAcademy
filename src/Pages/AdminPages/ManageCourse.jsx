@@ -43,85 +43,93 @@ const ManageCourses = () => {
   };
 
 
-
+// create and update course 
   const handleOk = async () => {
-  console.log('Form values:', form.getFieldsValue());
+    // console.log('Form values:', form.getFieldsValue());
 
-  try {
-    const values = await form.validateFields();
+    try {
+      const values = await form.validateFields();
 
-    if (editingCourse) {
-      // ✅ Update course
-      // console.log('Editing course:', editingCourse);
-      const response = await axiosInstance.put(`/updateCourseDetails/${editingCourse._id}`, values);
-      console.log('Update response:', response.data);
+      if (editingCourse) {
+        // ✅ Update course
+        // console.log('Editing course:', editingCourse);
+        const response = await axiosInstance.put(`/updateCourseDetails/${editingCourse._id}`, values);
+        // console.log('Update response:', response.data);
 
-      if (response.status === 200) {
-        const updatedCourse = response.data.course
-      
-        // 🔁 Find index of course in current state
-        const updatedIndex = courses.findIndex(course => course._id === updatedCourse._id)  ;
-      //  console.log('Updated index:', updatedIndex);
-        if (updatedIndex !== -1) {
-          // ✅ Create new array with updated course
-          const updatedCourses = [...courses];
-          updatedCourses[updatedIndex] = {
-            ...updatedCourse,
-            key: updatedIndex + 1, // add key for table or list
-          };
-      
-          setCourses(updatedCourses);
-          message.success(response.data.message || 'Course updated successfully!');
-        } else {
-          message.error('Course not found in state!');
+        if (response.status === 200) {
+          const updatedCourse = response.data.course
+
+          // 🔁 Find index of course in current state
+          const updatedIndex = courses.findIndex(course => course._id === updatedCourse._id);
+          //  console.log('Updated index:', updatedIndex);
+          if (updatedIndex !== -1) {
+            // ✅ Create new array with updated course
+            const updatedCourses = [...courses];
+            updatedCourses[updatedIndex] = {
+              ...updatedCourse,
+              key: updatedIndex + 1, // add key for table or list
+            };
+
+            setCourses(updatedCourses);
+            message.success(response.data.message || 'Course updated successfully!');
+          } else {
+            message.error('Course not found in state!');
+          }
+        }
+
+      } else {
+        //  Create new course
+        const key = courses.length;
+        const dataWithIndex = { ...values, key };
+
+        const response = await axiosInstance.post('/createCourse', dataWithIndex);
+        // console.log('Create response:', response.data);
+
+        if (response.status === 200) {
+          const newCourseWithKey = { ...response.data.courseData, key };
+          setCourses([...courses, newCourseWithKey]);
+          message.success(response.data.message || 'Course created successfully!');
         }
       }
-      
-    } else {
-      // ✅ Create new course
-      const key = courses.length;
-      const dataWithIndex = { ...values, key };
 
-      const response = await axiosInstance.post('/createCourse', dataWithIndex);
-      console.log('Create response:', response.data);
-
-      if (response.status === 200) {
-        const newCourseWithKey = { ...response.data.courseData, key };
-        setCourses([...courses, newCourseWithKey]);
-        message.success(response.data.message || 'Course created successfully!');
+      setIsModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      console.error('Error:', error);
+      if (error?.response?.data?.message) {
+        message.error(error.response.data.message);
+      } else if (error instanceof Error) {
+        message.error(error.message || 'Something went wrong!');
+      } else {
+        message.error('Failed to process the form!');
       }
     }
+  };
 
-    setIsModalVisible(false);
-    form.resetFields();
-  } catch (error) {
-    console.error('Error:', error);
-    if (error?.response?.data?.message) {
-      message.error(error.response.data.message);
-    } else if (error instanceof Error) {
-      message.error(error.message || 'Something went wrong!');
-    } else {
-      message.error('Failed to process the form!');
-    }
-  }
-};
-
-
-
-  // get the course data 
+// get the course data 
   const getCourses = async () => {
     try {
       const response = await axiosInstance.get('/getAllCourses');
       // console.log('Courses:', response.data?.Courses);
       let coursesData = response.data?.Courses.map((course, index) => ({
         ...course,
-        key: index + 1,
       }));
-      console.log('Courses Data:', coursesData);
+      // console.log('Courses Data:', coursesData);
       setCourses(coursesData || []);
     } catch (error) {
       console.error('Error fetching courses:', error);
       message.error(error.message || 'Failed to fetch courses!');
+    }
+  };
+// delete course
+  const handleDelete = async (id) => {
+    try {
+      await axiosInstance.delete(`/deleteCourse/${id}`);
+      setCourses(prevCourses => prevCourses.filter(course => course._id !== id));
+      message.success('Course deleted successfully!');
+    } catch (error) {
+      console.error('Delete failed:', error);
+      message.error('Failed to delete course. Please try again.');
     }
   };
 
@@ -134,32 +142,24 @@ const ManageCourses = () => {
     form.resetFields();
   };
 
-  const handleDelete = (id) => {
-    setCourses(courses.filter(course => course.id !== id));
-    message.success('Course deleted successfully!');
-  };
-
-
-
   const columns = [
     {
       title: 'NO',
-      dataIndex: 'key',
-      key: 'key',
-      render: (_, record) => <span className="font-medium">{record.key}</span>,
+      dataIndex: 'index',
+      key: 'index',
+      render: (_, record, index) => <span className="font-medium">{index + 1}</span>,
     },
     {
       title: 'Course Name',
       dataIndex: 'courseName',
       key: 'name',
       render: (text, record) => (
-        <div className="flex items-center">
+        <div className="flex items-center gap-1.5">
           <Avatar
             style={{
               backgroundColor: themeOptions.find(t => t.value === record.theme)?.color || '#3B82F6',
               color: 'white'
             }}
-            className="mr-3"
           >
             {text?.charAt(0)}
           </Avatar>
@@ -184,11 +184,10 @@ const ManageCourses = () => {
       key: 'students',
       render: (students) => (
         <Tag color="blue" className="font-medium">
-          {students || '---'} Students
+          {students || 0 } Students
         </Tag>
       ),
     },
-
     {
       title: 'Created At',
       dataIndex: 'created_at',
@@ -213,7 +212,7 @@ const ManageCourses = () => {
           />
           <Popconfirm
             title="Are you sure to delete this course?"
-            onConfirm={() => handleDelete(record.id)}
+            onConfirm={() => handleDelete(record._id)}
             okText="Yes"
             cancelText="No"
             placement="topRight"
@@ -250,6 +249,7 @@ const ManageCourses = () => {
           rowClassName="hover:bg-gray-50"
           className="custom-antd-table"
           scroll={{ "x": "100%" }}
+          rowKey={'_id'}
         />
       </div>
 
