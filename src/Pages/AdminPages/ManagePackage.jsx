@@ -310,7 +310,8 @@ console.log(editingPackage?.courseId?.courseName);
               label="Course"
               rules={[{ required: true, message: 'Please select course' }]}
             >
-              <Select placeholder="Select course" > 
+              <Select placeholder="Select course"
+               > 
                 {courses.map(course => (
                   <Option key={course._id} value={course._id}>{course.courseName}</Option>
                 ))}
