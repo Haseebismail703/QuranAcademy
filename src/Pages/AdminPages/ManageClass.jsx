@@ -1,71 +1,29 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Input, Card, message, Tooltip, Empty, Select, Switch, Space, Avatar, Divider } from 'antd';
-import {  DeleteOutlined, EditOutlined, UserAddOutlined, ClockCircleOutlined, UserOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, UserAddOutlined, ClockCircleOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-
+import axiosInstance from '../../Axios/axiosInstance.js'
 const { Option } = Select;
 
-const ManageCourse = () => {
+const ManageClass = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [form] = Form.useForm();
     const [editingClass, setEditingClass] = useState(null);
     const [hoveredCardIndex, setHoveredCardIndex] = useState(null);
+    const [courses, setCourses] = useState([]);
     let navigate = useNavigate()
     // Dummy data for classes
-    const [classes, setClasses] = useState([
-        {
-            id: '1',
-            courseName: 'Hifz Class',
-            teacher: 'Habib',
-            timing: '9:00 AM - 10:00 AM',
-            // classCode: 'ABC123',
-            createdAt: '2023-10-01',
-            theme: 'https://d1csarkz8obe9u.cloudfront.net/posterpreviews/free-google-classroom-banner-template-design-df5e76bfa478908057fd215227e2c284_screen.jpg?ts=1614075608',
-            students: [
-                { id: 's1', name: 'Ahmed Khan', avatar: 'https://randomuser.me/api/portraits/men/1.jpg' },
-                { id: 's2', name: 'Fatima Ali', avatar: 'https://randomuser.me/api/portraits/women/1.jpg' }
-            ],
-            status: true
-        },
-        {
-            id: '2',
-            courseName: 'Nazra Class',
-            teacher: 'Usama',
-            timing: '11:00 AM - 12:00 PM',
-            // classCode: 'DEF456',
-            createdAt: '2023-10-02',
-            theme: 'https://storage.googleapis.com/kami-uploads-public/library-resource-egxYhSV74CxA-vdSy9m-google-classroom-banner-paint-splats-png',
-            students: [
-                { id: 's3', name: 'Mohammed Hassan', avatar: 'https://randomuser.me/api/portraits/men/2.jpg' },
-                { id: 's4', name: 'Aisha Rahman', avatar: 'https://randomuser.me/api/portraits/women/2.jpg' }
-            ],
-            status: true
-        },
-        {
-            id: '3',
-            courseName: 'Tajweed Class',
-            teacher: 'Haseeb',
-            timing: '2:00 PM - 3:00 PM',
-            // classCode: 'GHI789',
-            createdAt: '2023-10-03',
-            theme: 'https://d1csarkz8obe9u.cloudfront.net/posterpreviews/mother%27s-day%2C-event%2C-greeting%2Cretail-design-template-3d3dbf8ff17ea5821edb60d082c02406_screen.jpg?ts=1698430100',
-            students: [
-                { id: 's5', name: 'Ibrahim Malik', avatar: 'https://randomuser.me/api/portraits/men/3.jpg' },
-                { id: 's6', name: 'Zainab Omar', avatar: 'https://randomuser.me/api/portraits/women/3.jpg' }
-            ],
-            status: false
-        }
-    ]);
+    const [classes, setClasses] = useState([]);
     // Dummy data for dropdowns
-    const courses = ['Hifz', 'Nazra', 'Tajweed', 'Fiqh', 'Arabic'];
-    const teachers = ['Mr. John', 'Ms. Emma', 'Dr. Smith', 'Mr. Ahmed', 'Ms. Fatima'];
+    const teachers = ['6809e7fdba4ffa4f777954c0'];
+
+
     const timings = [
-        '9:00 AM - 10:00 AM',
-        '11:00 AM - 12:00 PM',
-        '2:00 PM - 3:00 PM',
-        '4:00 PM - 5:00 PM',
-        '6:00 PM - 7:00 PM'
+         '3 PM to 7 PM (Afternoon)' , 
+         '7 PM to 1 AM (Evening)'  ,
+         '2 AM to 8 AM (Night)'  
     ];
+
     const themes = [
         { name: 'Theme 1', url: 'https://d1csarkz8obe9u.cloudfront.net/posterpreviews/free-google-classroom-banner-template-design-df5e76bfa478908057fd215227e2c284_screen.jpg?ts=1614075608' },
         { name: 'Theme 2', url: 'https://storage.googleapis.com/kami-uploads-public/library-resource-egxYhSV74CxA-vdSy9m-google-classroom-banner-paint-splats-png' },
@@ -86,56 +44,84 @@ const ManageCourse = () => {
     const handleOk = async () => {
         try {
             const values = await form.validateFields();
-
             if (editingClass) {
-                // Update existing class
-                setClasses(classes.map(cls =>
-                    cls.id === editingClass.id ? { ...cls, ...values } : cls
-                ));
+                const updatedClass = {
+                    ...editingClass,
+                    courseId: values.courseName,
+                    classTiming: values.classTiming,
+                    teacherId: values.teacher,
+                    theme: values.theme,
+                };
+
+                await axiosInstance.put(`/updateClass/${editingClass._id}`, updatedClass);
+
+                fetchClasses()
                 message.success('Class updated successfully!');
             } else {
-                // Add new class
                 const newClass = {
-                    id: (classes.length + 1).toString(),
-                    ...values,
-                    classCode: `CLS${Math.floor(100 + Math.random() * 900)}`,
-                    createdAt: new Date().toISOString().split('T')[0],
-                    students: [],
-                    status: true
+                    courseId: values.courseName,
+                    classTiming: values.classTiming,
+                    teacherId: values.teacher,
+                    theme: values.theme,
                 };
-                setClasses([...classes, newClass]);
+
+                const response = await axiosInstance.post('/createClass', newClass);
+                fetchClasses()
                 message.success('Class created successfully!');
             }
 
             setIsModalOpen(false);
             form.resetFields();
         } catch (error) {
-            console.error("Validation Failed:", error);
+            console.error("Error:", error);
+            message.error('Something went wrong!');
         }
     };
+    // get the class 
+    const fetchClasses = async () => {
+        try {
+            const res = await axiosInstance.get('/getAllClasses');
+            setClasses(res.data.classData);
+            console.log('Classes fetched:', res.data.classData);
+        } catch (error) {
+            console.error('Error fetching classes:', error);
+        }
+    };
+    const getCourses = async () => {
+        try {
+          const res = await axiosInstance.get('/getAllCourses');
+        //   console.log('Courses fetched:', res.data);
+            setCourses(res.data?.Courses);  
+        } catch (error) {
+          console.error('Error fetching courses:', error);
+          return [];
+        }
+      };
+
+    useEffect(() => {
+        fetchClasses()
+        getCourses()
+    }, [])
 
     const handleCancel = () => {
         setIsModalOpen(false);
         form.resetFields();
     };
 
-    const handleDelete = (classId) => {
-        setClasses(classes.filter(cls => cls.id !== classId));
-        message.success('Class deleted successfully!');
+    const handleDelete = async (classId) => {
+        let res = await axiosInstance.delete(`/deleteClass/${classId}`)
+        if (res.status === 200) {
+            message.success('Class deleted successfully!');
+            fetchClasses()
+        } else {
+            message.error('Failed to delete class!');
+        }
+
     };
-
-    const handleStatusChange = (classId, checked) => {
-        setClasses(classes.map(cls =>
-            cls.id === classId ? { ...cls, status: checked } : cls
-        ));
-        message.success(`Class ${checked ? 'activated' : 'deactivated'}!`);
-    };
-
-
     const showDeleteConfirm = (classId) => {
         Modal.confirm({
             title: 'Are you sure you want to delete this class?',
-            content: 'This action cannot be undone and will delete all associated data.',
+            content: 'This action  will delete all associated data in this class.',
             okText: 'Delete',
             okType: 'danger',
             cancelText: 'Cancel',
@@ -163,7 +149,7 @@ const ManageCourse = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {classes.map((cls, index) => (
                             <Card
-                                key={cls.id}
+                                key={cls._id}
                                 className={`transition-all duration-300 ${hoveredCardIndex === index ? 'transform scale-105 shadow-xl' : 'shadow-md'} rounded-2xl overflow-hidden border-0`}
                                 onMouseEnter={() => setHoveredCardIndex(index)}
                                 onMouseLeave={() => setHoveredCardIndex(null)}
@@ -178,14 +164,9 @@ const ManageCourse = () => {
                                         <div className="absolute bottom-4 left-4 text-white">
                                             <h3 className="text-xl font-bold">{cls.courseName}</h3>
                                             <p className="text-sm flex items-center">
-                                                <UserOutlined className="mr-1" /> {cls.teacher}
+                                                <UserOutlined className="mr-1" /> {cls.teacherId?.firstName}
                                             </p>
                                         </div>
-                                        <Switch
-                                            checked={cls.status}
-                                            onChange={(checked) => handleStatusChange(cls.id, checked)}
-                                            className="absolute top-3 right-3"
-                                        />
                                     </div>
                                 }
                             >
@@ -193,25 +174,36 @@ const ManageCourse = () => {
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-600">
                                             <ClockCircleOutlined className="mr-2" />
-                                            {cls.timing}
+                                            {cls.classTiming}
                                         </span>
                                     </div>
 
                                     <Divider className="my-2" />
 
                                     <div>
-                                        <h4 className="font-medium text-gray-700 mb-2">Students ({cls.students.length})</h4>
+                                        <h4 className="font-medium text-gray-700 mb-2">Students ({cls.studentId?.length})</h4>
                                         <div className="flex flex-wrap gap-2 mb-3">
-                                            {cls.students.length > 0 ? (
-                                                <>
-                                                    {cls.students.map(student => (
-                                                        <Tooltip title={"Click to see All enrolled student"} key={student.id}>
-                                                            <Avatar onClick={() => navigate('/admin/manage-class/all-students/1')}  style={{ cursor: "pointer" }} src={student.avatar} size="small" />
-                                                        </Tooltip>
-                                                    ))}
+                                            {cls.studentId?.length > 0 ? (
+                                                <>{cls.studentId.slice(0, 3).map(student => (
+                                                    <Tooltip title="Click to see All enrolled student" key={student._id}>
+                                                        <Avatar
+                                                            onClick={() => navigate('/admin/manage-class/all-students/1')}
+                                                            style={{ cursor: "pointer" }}
+                                                            size="small"
+                                                            src={student.profileUrl || undefined}
+                                                            icon={
+                                                                !student.profileUrl &&
+                                                                (student.gender === "male" ? "👨" :
+                                                                    student.gender === "female" ? "👩" :
+                                                                        <UserOutlined />)
+                                                            }
+                                                        />
+                                                    </Tooltip>
+                                                ))}
+
                                                     <Tooltip title="Add student">
                                                         <Button
-                                                          onClick={() => navigate('/admin/manage-class/add-student/1')}
+                                                            onClick={() => navigate('/admin/manage-class/add-student/1')}
                                                             type="dashed"
                                                             shape="circle"
                                                             icon={<UserAddOutlined />}
@@ -227,7 +219,7 @@ const ManageCourse = () => {
                                                     type="dashed"
                                                     icon={<UserAddOutlined />}
                                                     className="text-indigo-500"
-                                                    
+
                                                 >
                                                     Add Students
                                                 </Button>
@@ -249,7 +241,7 @@ const ManageCourse = () => {
                                         <Button
                                             danger
                                             icon={<DeleteOutlined />}
-                                            onClick={() => showDeleteConfirm(cls.id)}
+                                            onClick={() => showDeleteConfirm(cls._id)}
                                         >
                                             Delete
                                         </Button>
@@ -296,7 +288,7 @@ const ManageCourse = () => {
                                 optionFilterProp="children"
                             >
                                 {courses.map(course => (
-                                    <Option key={course} value={course}>{course}</Option>
+                                    <Option key={course._id} value={course._id}>{course.courseName}</Option>
                                 ))}
                             </Select>
                         </Form.Item>
@@ -319,7 +311,7 @@ const ManageCourse = () => {
                         </Form.Item>
 
                         <Form.Item
-                            name="timing"
+                            name="classTiming"
                             label="Class Timing"
                             rules={[{ required: true, message: 'Please select a timing' }]}
                         >
@@ -366,4 +358,4 @@ const ManageCourse = () => {
     );
 };
 
-export default ManageCourse;
+export default ManageClass;
