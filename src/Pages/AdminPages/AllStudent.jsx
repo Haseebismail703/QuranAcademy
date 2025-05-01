@@ -1,100 +1,141 @@
-import React, { useState } from 'react';
-import { Table, Avatar, Button, Modal, Space, Tag, Input, Tooltip, message } from 'antd';
-import { SearchOutlined, UserOutlined, DeleteOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import {
+    Table,
+    Avatar,
+    Button,
+    Modal,
+    Space,
+    Tag,
+    Input,
+    Tooltip,
+    message,
+} from 'antd';
+import {
+    SearchOutlined,
+    UserOutlined,
+    DeleteOutlined,
+} from '@ant-design/icons';
+import axiosInsteance from '../../Axios/axiosInstance.js';
+import { useParams } from 'react-router-dom';
 
 const AllStudentsPage = () => {
+    const [students, setStudents] = useState([]);
+    const [filteredStudents, setFilteredStudents] = useState([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [studentToDelete, setStudentToDelete] = useState(null);
     const [searchText, setSearchText] = useState('');
+    const [classData, setClassData] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const { classId } = useParams();
 
-    // Dummy student data
-    const [students, setStudents] = useState([
-        {
-            key: '1',
-            name: 'Ahmed Khan',
-            email: 'ahmed.khan@example.com',
-            avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
-            status: 'active',
-            enrollmentDate: '2023-01-15',
-        },
-        {
-            key: '2',
-            name: 'Fatima Ali',
-            email: 'fatima.ali@example.com',
-            avatar: 'https://randomuser.me/api/portraits/women/1.jpg',
-            status: 'active',
-            enrollmentDate: '2023-02-20',
-        },
-        {
-            key: '3',
-            name: 'Mohammed Hassan',
-            email: 'mohammed.h@example.com',
-            avatar: 'https://randomuser.me/api/portraits/men/2.jpg',
-            status: 'inactive',
-            enrollmentDate: '2023-03-10',
-        },
-        {
-            key: '4',
-            name: 'Aisha Rahman',
-            email: 'aisha.r@example.com',
-            avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
-            status: 'active',
-            enrollmentDate: '2023-04-05',
-        },
-        {
-            key: '5',
-            name: 'Ibrahim Malik',
-            email: 'ibrahim.m@example.com',
-            avatar: 'https://randomuser.me/api/portraits/men/3.jpg',
-            status: 'active',
-            enrollmentDate: '2023-05-12',
-        },
-        {
-            key: '6',
-            name: 'Zainab Omar',
-            email: 'zainab.o@example.com',
-            avatar: 'https://randomuser.me/api/portraits/women/3.jpg',
-            status: 'inactive',
-            enrollmentDate: '2023-06-18',
-        },
-    ]);
+    const fetchStudents = async () => {
+        try {
+            setLoading(true);
+            const res = await axiosInsteance.get(`/getClassWithStudents/${classId}`);
+            const classInfo = res.data.classData;
+            setClassData({
+                courseName: classInfo?.courseId?.courseName || 'N/A',
+                teacherName: classInfo?.teacherId?.firstName || 'N/A',
+                classTiming: classInfo?.classTiming || 'N/A',
+            });
 
-    // Filter students based on search text
-    const filteredStudents = students.filter(student =>
-        student.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        student.email.toLowerCase().includes(searchText.toLowerCase())
-    );
+            const studentsData = classInfo?.students?.map((entry) => {
+                const { studentId, studentTiming, addedAt, _id } = entry;
+                return {
+                    ...studentId,
+                    studentTiming: studentTiming || 'N/A',
+                    enrollmentDate: new Date(addedAt).toLocaleDateString(),
+                    classStudentId: _id,
+                };
+            }) || [];
+
+            setStudents(studentsData);
+            setFilteredStudents(studentsData);
+        } catch (err) {
+            console.error(err);
+            message.error('Failed to fetch students');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchStudents();
+    }, []);
+
+    useEffect(() => {
+        const filtered = students.filter(
+            (student) =>
+                student.firstName?.toLowerCase().includes(searchText.toLowerCase()) ||
+                student.email?.toLowerCase().includes(searchText.toLowerCase())
+        );
+        setFilteredStudents(filtered);
+    }, [searchText, students]);
 
     const showDeleteConfirm = (student) => {
         setStudentToDelete(student);
         setIsModalVisible(true);
     };
 
-    const handleDelete = () => {
-        setStudents(students.filter(student => student.key !== studentToDelete.key));
-        message.success(`Student ${studentToDelete.name} removed successfully`);
-        setIsModalVisible(false);
-        setStudentToDelete(null);
-    };
-
-    const handleCancelDelete = () => {
-        setIsModalVisible(false);
-        setStudentToDelete(null);
+    const handleDelete = async () => {
+        if (!studentToDelete) return;
+        // console.log('Deleting student:', studentToDelete);
+        try {
+            await axiosInsteance.post(`/removeStudentFromClass`, {
+                classId: classId,
+                studentId: studentToDelete._id,
+            });
+            message.success(`Student ${studentToDelete.firstName} removed successfully`);
+            fetchStudents();
+        } catch (err) {
+            message.error('Failed to delete student');
+        } finally {
+            setIsModalVisible(false);
+            setStudentToDelete(null);
+        }
     };
 
     const columns = [
         {
+            title: 'S.No',
+            dataIndex: 'index',
+            key: 'index',
+            render: (_, __, index) => <span>{index + 1}</span>,
+
+        
+        },
+        {
             title: 'Student',
-            dataIndex: 'name',
-            key: 'name',
+            dataIndex: 'firstName',
+            key: 'firstName',
             render: (text, record) => (
                 <div className="flex items-center">
-                    <Avatar src={record.avatar} icon={<UserOutlined />} className="mr-5" />
+                    <Avatar
+                        src={record.profileUrl?.trim() || null}
+                        icon={!record.profileUrl?.trim() ? (record.gender === 'female' ? "👩" : "👨") : null}
+
+                    />
                     <div>
                         <p className="font-medium text-gray-800 ml-3">{text}</p>
                         <p className="text-gray-500 text-xs ml-3">{record.email}</p>
                     </div>
                 </div>
+            ),
+        },
+        {
+            title: 'Student Timing',
+            dataIndex: 'studentTiming',
+            key: 'studentTiming',
+            render: (timing) => <span className="text-gray-600">{timing}</span>,
+        },
+        {
+            title: 'Gender',
+            dataIndex: 'gender',
+            key: 'gender',
+            render: (gender) => (
+                <Tag color={gender === 'male' ? 'green' : 'geekblue'} className="capitalize">
+                    {gender}
+                </Tag>
             ),
         },
         {
@@ -133,40 +174,66 @@ const AllStudentsPage = () => {
 
     return (
         <>
-
             <center>
-            <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">Class : Hifz</h1>
+                <h1 className="text-2xl font-bold text-gray-800 mb-4">All Enrolled Students</h1>
             </center>
+
+            {classData && (
+                <div className="bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl p-6 shadow-lg border border-blue-300 mb-6">
+                    <h2 className="text-xl font-semibold text-blue-800 mb-4 border-b pb-2">📘 Class Details</h2>
+                    <div className="space-y-2 text-blue-900">
+                        <p>
+                            <span className="font-bold">📚 Course Name:</span> {classData.courseName}
+                        </p>
+                        <p>
+                            <span className="font-bold">👨‍🏫 Teacher Name:</span> {classData.teacherName}
+                        </p>
+                        <p>
+                            <span className="font-bold">⏰ Class Timing:</span> {classData.classTiming}
+                        </p>
+                    </div>
+                </div>
+            )}
+
+
             <div className="container mx-auto px-4 py-8">
+
+
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">All Enrolled Students</h1>
+                    <h2 className="text-xl font-semibold text-gray-800 mb-4 md:mb-0">
+                        🎓 Student List
+                    </h2>
                     <div className="w-full md:w-64">
                         <Input
-                            placeholder="Search students..."
+                            placeholder="Search students by name, email "
                             prefix={<SearchOutlined className="text-gray-400" />}
                             onChange={(e) => setSearchText(e.target.value)}
                             className="rounded-lg"
+                            allowClear
                         />
                     </div>
                 </div>
+
+
 
                 <div className="bg-white rounded-xl shadow-md overflow-hidden">
                     <Table
                         columns={columns}
                         dataSource={filteredStudents}
+                        loading={loading}
                         pagination={{ pageSize: 5 }}
+                        rowKey="_id"
                         rowClassName="hover:bg-gray-50"
                         className="antd-table-custom"
-                        scroll={{ "x": "100%" }}
+                        scroll={{ x: '100%' }}
                     />
                 </div>
 
-                {/* Delete Confirmation Modal */}
                 <Modal
                     title="Confirm Removal"
                     open={isModalVisible}
                     onOk={handleDelete}
-                    onCancel={handleCancelDelete}
+                    onCancel={() => setIsModalVisible(false)}
                     okText="Remove"
                     cancelText="Cancel"
                     okButtonProps={{ danger: true }}
@@ -175,9 +242,9 @@ const AllStudentsPage = () => {
                     {studentToDelete && (
                         <div className="flex flex-col items-center py-4">
                             <Avatar
-                                src={studentToDelete.avatar}
+                                src={studentToDelete.profileUrl?.trim() || null}
+                                icon={!studentToDelete.profileUrl?.trim() ? (studentToDelete.gender === 'female' ? "👩" : "👨") : null}
                                 size={64}
-                                icon={<UserOutlined />}
                                 className="mb-3"
                             />
                             <p className="text-lg font-medium text-gray-800 mb-1">{studentToDelete.name}</p>
@@ -189,24 +256,23 @@ const AllStudentsPage = () => {
                     )}
                 </Modal>
 
-                {/* Custom CSS for table */}
                 <style>{`
-        .antd-table-custom .ant-table-thead > tr > th {
-          background-color: #f8fafc;
-          color: #64748b;
-          font-weight: 600;
-          border-bottom: 1px solid #e2e8f0;
-        }
-        .antd-table-custom .ant-table-tbody > tr > td {
-          border-bottom: 1px solid #f1f5f9;
-        }
-        .antd-table-custom .ant-pagination-item-active {
-          border-color: #6366f1;
-        }
-        .antd-table-custom .ant-pagination-item-active a {
-          color: #6366f1;
-        }
-      `}</style>
+                    .antd-table-custom .ant-table-thead > tr > th {
+                        background-color: #f8fafc;
+                        color: #64748b;
+                        font-weight: 600;
+                        border-bottom: 1px solid #e2e8f0;
+                    }
+                    .antd-table-custom .ant-table-tbody > tr > td {
+                        border-bottom: 1px solid #f1f5f9;
+                    }
+                    .antd-table-custom .ant-pagination-item-active {
+                        border-color: #6366f1;
+                    }
+                    .antd-table-custom .ant-pagination-item-active a {
+                        color: #6366f1;
+                    }
+                `}</style>
             </div>
         </>
     );

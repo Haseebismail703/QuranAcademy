@@ -12,16 +12,16 @@ const ManageClass = () => {
     const [hoveredCardIndex, setHoveredCardIndex] = useState(null);
     const [courses, setCourses] = useState([]);
     let navigate = useNavigate()
-    // Dummy data for classes
     const [classes, setClasses] = useState([]);
+    const [singleClass, setSingleClass] = useState(null)
     // Dummy data for dropdowns
     const teachers = ['6809e7fdba4ffa4f777954c0'];
-
+    console.log(singleClass);
 
     const timings = [
-         '3 PM to 7 PM (Afternoon)' , 
-         '7 PM to 1 AM (Evening)'  ,
-         '2 AM to 8 AM (Night)'  
+        '3 PM to 7 PM (Afternoon)',
+        '7 PM to 1 AM (Evening)',
+        '2 AM to 8 AM (Night)'
     ];
 
     const themes = [
@@ -89,14 +89,14 @@ const ManageClass = () => {
     };
     const getCourses = async () => {
         try {
-          const res = await axiosInstance.get('/getAllCourses');
-        //   console.log('Courses fetched:', res.data);
-            setCourses(res.data?.Courses);  
+            const res = await axiosInstance.get('/getAllCourses');
+            //   console.log('Courses fetched:', res.data);
+            setCourses(res.data?.Courses);
         } catch (error) {
-          console.error('Error fetching courses:', error);
-          return [];
+            console.error('Error fetching courses:', error);
+            return [];
         }
-      };
+    };
 
     useEffect(() => {
         fetchClasses()
@@ -179,54 +179,67 @@ const ManageClass = () => {
                                     </div>
 
                                     <Divider className="my-2" />
-
                                     <div>
-                                        <h4 className="font-medium text-gray-700 mb-2">Students ({cls.studentId?.length})</h4>
+                                        <h4 className="font-medium text-gray-700 mb-2">
+                                            Students ({cls.students?.length || 0})
+                                        </h4>
                                         <div className="flex flex-wrap gap-2 mb-3">
-                                            {cls.studentId?.length > 0 ? (
-                                                <>{cls.studentId.slice(0, 3).map(student => (
-                                                    <Tooltip title="Click to see All enrolled student" key={student._id}>
-                                                        <Avatar
-                                                            onClick={() => navigate('/admin/manage-class/all-students/1')}
-                                                            style={{ cursor: "pointer" }}
-                                                            size="small"
-                                                            src={student.profileUrl || undefined}
-                                                            icon={
-                                                                !student.profileUrl &&
-                                                                (student.gender === "male" ? "👨" :
-                                                                    student.gender === "female" ? "👩" :
-                                                                        <UserOutlined />)
-                                                            }
-                                                        />
-                                                    </Tooltip>
-                                                ))}
+                                            {cls.students?.length > 0 ? (
+                                                <>
+                                                    {cls.students.slice(0, 3).map((entry) => {
+                                                        const student = entry.studentId; // populated student object
+                                                        return (
+                                                            <Tooltip title="Click to see all enrolled students" key={student._id}>
+                                                                <Avatar
+                                                                    onClick={() => navigate(`/admin/manage-class/all-students/${cls._id}`, { state: { singleClass: cls } })}
+                                                                    style={{ cursor: "pointer" }}
+                                                                    size="small"
+                                                                    src={student.profileUrl || undefined}
+                                                                    icon={
+                                                                        !student.profileUrl &&
+                                                                        (student.gender === "male"
+                                                                            ? "👨"
+                                                                            : student.gender === "female"
+                                                                                ? "👩"
+                                                                                : <UserOutlined />)
+                                                                    }
+                                                                />
+                                                            </Tooltip>
+                                                        );
+                                                    })}
 
                                                     <Tooltip title="Add student">
                                                         <Button
-                                                            onClick={() => navigate('/admin/manage-class/add-student/1')}
+                                                            onClick={() =>
+                                                                navigate(`/admin/manage-class/add-student/${cls.courseId._id}`, {
+                                                                    state: { singleClass: cls }
+                                                                })
+                                                            }
                                                             type="dashed"
                                                             shape="circle"
                                                             icon={<UserAddOutlined />}
                                                             size="small"
                                                             className="text-indigo-500"
                                                         />
-
                                                     </Tooltip>
                                                 </>
                                             ) : (
-
                                                 <Button
+                                                    onClick={() =>
+                                                        navigate(`/admin/manage-class/add-student/${cls.courseId._id}`, {
+                                                            state: { singleClass: cls }
+                                                        })
+                                                    }
                                                     type="dashed"
                                                     icon={<UserAddOutlined />}
                                                     className="text-indigo-500"
-
                                                 >
                                                     Add Students
                                                 </Button>
-
                                             )}
                                         </div>
                                     </div>
+
 
                                     <div className="flex justify-between">
                                         <Button

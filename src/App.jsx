@@ -72,7 +72,7 @@ function App() {
                   <Route path="manage-course" element={<ManageCourse />} />
                   <Route path="manage-class" element={<ManageClass />} />
                   <Route path="manage-class/all-students/:classId" element={<AllStudent />} />
-                  <Route path="manage-class/add-student/:classId" element={<AddStudent />} />
+                  <Route path="manage-class/add-student/:courseId" element={<AddStudent />} />
                   <Route path="manage-package" element={<ManagePackage />} />
                   <Route path="notification" element={<SendNotification />} />
                   <Route path ="profile" element={<AdminProfile/>}/>

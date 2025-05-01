@@ -11,13 +11,14 @@ const PackageManagement = () => {
   const [packages, setPackages] = useState([]);
   const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
-
+console.log(students)
   let getCourseAndWaitingStudent = async () => {
     try {
       const Response = await axiosInstance.get("/getCourseAndWaitingStudent");
+      console.log(Response.data);
       if (Response.status === 200) {
-        setCourses(Response.data?.courses);
-        setStudents(Response.data?.students);
+        setCourses(Response.data?.courses || []);
+        setStudents(Response.data?.waitingStudents || []);
         console.log(Response.data);
       }
     } catch (error) {
@@ -49,13 +50,11 @@ const PackageManagement = () => {
       const response = await axiosInstance.get("/getAllPackages");
       console.log(response.data);
       if (response.status === 200) {
-        const packageData = response.data?.packageData
+        const packageData = response.data?.data
           .map(pkg => ({
             ...pkg,
-
           }));
         setPackages(packageData);
-
       } else {
         message.error('Failed to fetch packages');
       }
@@ -71,7 +70,6 @@ const PackageManagement = () => {
     getCourseAndWaitingStudent()
   }, []);
 
-console.log(editingPackage?.courseId?.courseName);
   const handleSubmit = () => {
     form.validateFields().then(async (values) => {
       try {
@@ -88,26 +86,9 @@ console.log(editingPackage?.courseId?.courseName);
           };
         
           const response = await axiosInstance.put(`/updatePackage/${editingPackage._id}`, updatedPackage);
-        
-          if (response.status === 200) {
-            let updatedPackageFromServer = response.data?.data;
-            const student = students.find(student => student._id === updatedPackageFromServer.studentId);
-            const course = courses.find(course => course._id === updatedPackageFromServer.courseId);
-            let updatedIndex = packages.findIndex(pkg => pkg._id === updatedPackageFromServer._id);
-            if (updatedIndex !== -1) {
-              let updatedPackages = [...packages];
-              updatedPackages[updatedIndex] = {
-                ...updatedPackageFromServer,
-                key: updatedIndex + 1,
-                studentId: student,
-                courseId: course,
-              };
-        
-              setPackages(updatedPackages);
-              message.success(response.data?.message || 'Package updated successfully!');
-            }
-          } else {
-            message.error('Failed to update package');
+        if( response.status === 200) {
+          getPackageData();
+            message.success('Package updated successfully!');
           }
         }
         else {
@@ -124,16 +105,12 @@ console.log(editingPackage?.courseId?.courseName);
           };
 
           const response = await axiosInstance.post('/createPackage', newPackage);
-        //  console.log(response.data);
+         console.log(response.data);
           if (response.status === 200) {
-            // filter the student and courseName
-            const student = students.find(student => student._id === response.data?.data?.studentId);
-            const course = courses.find(course => course._id === response.data?.data?.courseId);
-            let newPackageWithKey = { ...packages, key: packages.length + 1, ...response.data?.data , studentId: student, courseId: course };
-            setPackages([...packages, newPackageWithKey]);
-            message.success('Package added successfully!');
+            getPackageData();
+            message.success('Package created successfully!');
           } else {
-            message.error('Failed to add package');
+            message.error('Failed to create package');
           }
         }
         setIsModalVisible(false);
@@ -145,10 +122,11 @@ console.log(editingPackage?.courseId?.courseName);
   };
 
   const handleDelete = async (id) => {
+    console.log(id)
     try {
       const response = await axiosInstance.delete(`/deletePackage/${id}`);
       if (response.status === 200) {
-        setPackages(prevpkg => prevpkg.filter(pkg => pkg._id !== id));
+        getPackageData()
         message.success(response.data?.message  ||'Package deleted successfully!');
       } else {
         message.error('Failed to delete package');
@@ -226,11 +204,11 @@ console.log(editingPackage?.courseId?.courseName);
     },
     {
       title: 'Payment status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (
-        <Tag color={status === 'complete' ? 'green' : 'red'} className="capitalize">
-          {status}
+      dataIndex: 'paymentStatus',
+      key: 'paymentStatus',
+      render: (paymentStatus) => (
+        <Tag color={paymentStatus === 'completed' ? 'green' : 'red'} className="capitalize">
+          {paymentStatus}
         </Tag>
       ),
     },
