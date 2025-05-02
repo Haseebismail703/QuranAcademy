@@ -23,8 +23,9 @@ import QuranCourseForKids from './Pages/HomePages/QuranCourseForKids.jsx'
 import LearnQuran from './Pages/HomePages/LearnQuran.jsx'
 import StudentLayout from "./Components/StudentComponent/StudentLayout.jsx";
 import StudentDashboard from './Pages/StudentPages/StudentDashboard.jsx'
-import StudentClass from './Pages/StudentPages/StudenrClass.jsx'
+import StudentClass from './Pages/StudentPages/StudentClass.jsx'
 import TeacherProfile from "./Pages/TeacherPages/TeacherProfile.jsx";
+import StudentProfile from './Pages/StudentPages/StudentProfile.jsx'
 // auth
 import Login from './Pages/StudentPages/Login.jsx'
 import Register from './Pages/StudentPages/Register.jsx'
@@ -106,9 +107,9 @@ function App() {
                 <Routes>
                   <Route path="dashboard" element={<StudentDashboard />} />
                   <Route path="class" element={<StudentClass />} />
-                  <Route path="class/resourses/:classId" element={<StudentResourses />} />
+                  <Route path="class/resources/:classId" element={<StudentResourses />} />
                   <Route path="fee" element={<StudentFee />} />
-
+                  <Route path ="profile" element={<StudentProfile/>}/>
 
                 </Routes>
               </StudentLayout>

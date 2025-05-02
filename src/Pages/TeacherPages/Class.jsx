@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, Badge, Tooltip } from "antd";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
     UserOutlined,
     ClockCircleOutlined,
@@ -8,113 +8,106 @@ import {
     FileAddOutlined,
     CheckOutlined,
 } from "@ant-design/icons";
-
-const classData = [
-    {
-        id: 1,
-        className: "Web Development",
-        courseName: "Full Stack Bootcamp",
-        image:
-            "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/free-google-classroom-banner-template-design-df5e76bfa478908057fd215227e2c284_screen.jpg?ts=1614075608",
-        totalStudents: 30,
-        maxStudents: 30,
-        startTime: "12:00 PM",
-        endTime: "6:00 PM",
-    },
-    {
-        id: 2,
-        className: "AI & ML",
-        courseName: "Advanced Machine Learning",
-        image:
-            "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/free-google-classroom-banner-template-design-df5e76bfa478908057fd215227e2c284_screen.jpg?ts=1614075608",
-        totalStudents: 18,
-        maxStudents: 25,
-        startTime: "12:00 PM",
-        endTime: "6:00 PM",
-    },
-    {
-        id: 3,
-        className: "UI/UX Design",
-        courseName: "Creative UI Course",
-        image:
-            "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/free-google-classroom-banner-template-design-df5e76bfa478908057fd215227e2c284_screen.jpg?ts=1614075608",
-        totalStudents: 12,
-        maxStudents: 15,
-        startTime: "12:00 PM",
-        endTime: "6:00 PM",
-    },
-];
-
-const isClassCompleted = (endTime) => {
-    // Simulated logic for demo purposes
-    return false; // You can change this to true to test color change
-};
-
-const handleMarkAttendance = (id) => {
-    console.log("Marking attendance for class:", id);
-};
+import axiosInstance from '../../Axios/axiosInstance.js';
 
 const Class = () => {
-    let navigate = useNavigate()
+    const [classes, setClasses] = useState([]);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        axiosInstance.get("/getClassByTeacherId/6809e7fdba4ffa4f777954c0")
+            .then((res) => {
+                setClasses(res.data);
+                console.log(res.data);
+            })
+            .catch((err) => {
+                console.error("Failed to fetch classes:", err);
+            });
+    }, []);
+
+    const isClassFull = (students) => students.length >= 12;
+
     return (
-        <div className="p-6 min-h-screen  bg-gray-50">
-            <h2 className="text-3xl font-semibold mb-10 text-center text-blue-900">
-                📚 All Classes
+        <div className="p-6 min-h-screen bg-gradient-to-br ">
+            <h2 className="text-4xl font-bold mb-12 text-center text-blue-900">
+                🎓 All Courses
             </h2>
 
-            <div className="flex flex-wrap justify-center gap-6">
-                {classData.map((cls) => {
-                    const isFull = cls.totalStudents >= cls.maxStudents;
-                    const completed = isClassCompleted(cls.endTime);
+            <div className="flex flex-wrap justify-center gap-8">
+                {classes.map((cls) => {
+                    const isFull = isClassFull(cls.students);
+
                     return (
                         <Card
-                            key={cls.id}
+                            key={cls._id}
                             hoverable
-                            className={`w-[300px] transition-all duration-300 border border-gray-200 shadow-md ${completed ? "bg-red-50" : "bg-white"
-                                }`}
-                            style={{
-                                borderRadius: "20px 41px 1px 41px",
-                            }}
+                            className="w-[320px] shadow-lg border-none transition-transform duration-300 transform hover:scale-105 bg-white"
+                            style={{ borderRadius: "25px" }}
                             cover={
                                 <img
-                                    alt="class cover"
-                                    src={cls.image}
-                                    className="h-48 w-full object-cover rounded-t-2xl"
+                                    alt="class theme"
+                                    src={cls.theme}
+                                    className="h-48 w-full object-cover rounded-t-[25px]"
                                 />
                             }
                             actions={[
-                                <Tooltip title="Add Resourses">
-                                    <FileAddOutlined onClick={()=> navigate('/teacher/class/add-resourse/:classId')} key="resourses" style={{ color: "#1890ff" }} />
+                                <Tooltip title="Add Resources">
+                                    <FileAddOutlined
+                                        style={{ color: "#3b82f6", fontSize: 20 }}
+                                        onClick={() =>
+                                            navigate(`/teacher/class/add-resourse/${cls._id}`)
+                                        }
+                                    />
                                 </Tooltip>,
                                 <Tooltip title="Send Notification">
-                                    <SendOutlined onClick={()=>navigate('/teacher/class/send-notification/:classId')} key="notify" style={{ color: "#52c41a" }} />
+                                    <SendOutlined
+                                        style={{ color: "#10b981", fontSize: 20 }}
+                                        onClick={() =>
+                                            navigate(`/teacher/class/send-notification/${cls._id}`)
+                                        }
+                                    />
                                 </Tooltip>,
                                 <Tooltip title="View Students">
-                                    <UserOutlined onClick={()=>navigate('/teacher/class/enrolled-student/:classId')} key="students" style={{ color: "#faad14" }} />
+                                    <UserOutlined
+                                        style={{ color: "#f59e0b", fontSize: 20 }}
+                                        onClick={() =>
+                                            navigate(`/teacher/class/enrolled-student/${cls._id}`)
+                                        }
+                                    />
                                 </Tooltip>,
                                 <Tooltip title="Mark Attendance">
                                     <CheckOutlined
-                                    
-                                        key="attendance"
-                                        style={{ color: "#13c2c2" }}
-                                        onClick={() => navigate('/teacher/class/mark-attendence/:classId')}
+                                        style={{ color: "#0ea5e9", fontSize: 20 }}
+                                        onClick={() =>
+                                            navigate(`/teacher/class/mark-attendence/${cls._id}`, {
+                                                state: { classDetail: cls }
+                                            })
+                                        }
                                     />
                                 </Tooltip>,
                             ]}
                         >
                             <div className="space-y-2">
-                                <h3 className="text-xl font-bold text-blue-800">{cls.className}</h3>
-                                <p className="text-gray-500">{cls.courseName}</p>
+                                <h3 className="text-lg font-semibold text-blue-700">
+                                    {cls.courseId?.courseName || "Untitled Course"}
+                                </h3>
+                                <p className="text-sm text-gray-600">
+                                    Teacher: <span className="font-medium">{cls.teacherId?.firstName || "Unknown"}</span>
+                                </p>
+                               
 
                                 <div className="flex items-center justify-between mt-3">
-                                    <span className="text-sm text-gray-600 flex items-center gap-1">
-                                        <ClockCircleOutlined className="text-red-500" />
-                                        {cls.startTime} - {cls.endTime}
+                                    <span className="text-sm text-gray-700 flex items-center gap-2">
+                                        <ClockCircleOutlined className="text-blue-500" />
+                                        {cls.classTiming}
                                     </span>
                                     {isFull ? (
-                                        <Badge count="Full" style={{ backgroundColor: "#f5222d" }} />
+                                        <Badge count="Full" style={{ backgroundColor: "#ef4444" }} />
                                     ) : (
-                                        <Badge count={`${cls.totalStudents}/${cls.maxStudents}`} />
+                                        <Badge
+                                            count={`${cls.students.length}/12`}
+                                            style={{ backgroundColor: "#22c55e" }}
+                                        />
                                     )}
                                 </div>
                             </div>

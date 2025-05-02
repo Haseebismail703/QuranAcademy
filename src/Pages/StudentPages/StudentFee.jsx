@@ -1,151 +1,70 @@
-import React from 'react';
-import { Card, Tag, Button } from 'antd';
-import {
-  DollarOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined
-} from '@ant-design/icons';
+import { useState } from "react";
+import { Calendar, DollarSign, Package } from "lucide-react"; // Importing Lucide icons
 
-const FeePaymentPage = () => {
-  // Sample course packages data
-  const packages = [
-    {
-      id: 1,
-      name: 'Basic Package',
-      course: 'Mathematics 101',
-      price: 299,
-      duration: '3 Months',
-      endDate: '2023-12-31',
-      isExpired: false
-    },
-    {
-      id: 2,
-      name: 'Standard Package',
-      course: 'Computer Science 201',
-      price: 499,
-      duration: '6 Months',
-      endDate: '2023-10-15',  // Past date (expired)
-      isExpired: true
-    },
-    {
-      id: 3,
-      name: 'Premium Package',
-      course: 'Physics 301',
-      price: 799,
-      duration: '12 Months',
-      endDate: '2028-03-30',
-      isExpired: false
-    },
-    {
-      id: 4,
-      name: 'Gold Package',
-      course: 'Literature 150',
-      price: 999,
-      duration: '12 Months',
-      endDate: '2023-09-01',  // Past date (expired)
-      isExpired: true
-    }
-  ];
+const paymentData = [
+  {
+    title: "Premium Package",
+    description: "Physics 301",
+    price: "$799",
+    duration: "12 Months",
+    endDate: "2028-03-30",
+  },
+  {
+    title: "Basic Package",
+    description: "Math 101",
+    price: "$499",
+    duration: "6 Months",
+    endDate: "2027-12-15",
+  },
+  {
+    title: "Advanced Package",
+    description: "Chemistry 401",
+    price: "$999",
+    duration: "18 Months",
+    endDate: "2029-06-20",
+  },
+];
 
-  // Color scheme
-  const activeCardStyle = {
-    borderTop: '4px solid #4f46e5', // Indigo-600
-    background: 'linear-gradient(145deg, #ffffff, #f9fafb)'
-  };
-
-  const expiredCardStyle = {
-    borderTop: '4px solid #e5e7eb', // Gray-200
-    background: 'linear-gradient(145deg, #f9fafb, #f3f4f6)'
-  };
-
-  // Function to check if package is expired
-  const checkExpired = (endDate) => {
-    const today = new Date();
-    const expiryDate = new Date(endDate);
-    return expiryDate < today;
-  };
-
+export default function FeePaymentPage() {
   return (
-    <div className="p-4 md:p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-          <DollarOutlined className="mr-2 text-indigo-600" /> Course Packages
-        </h1>
-        <p className="text-gray-600 mb-8">Choose your preferred learning package</p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {packages.map(pkg => {
-            const isExpired = checkExpired(pkg.endDate);
-            
-            return (
-              <div key={pkg.id} className="relative transform hover:scale-[1.02] transition-all duration-200">
-                {/* Expired overlay */}
-                {isExpired && (
-                  <div className="absolute inset-0 bg-white bg-opacity-70 z-10 rounded-lg flex items-center justify-center">
-                    <Tag color="green" className="rounded-full px-4 py-1 text-sm font-medium">
-                      <CloseCircleOutlined className="mr-1" /> Paid
-                    </Tag>
-                  </div>
-                )}
-                
-                <Card
-                  className={`shadow-lg h-full transition-all ${isExpired ? 'opacity-90' : 'hover:shadow-xl'}`}
-                  bodyStyle={{ padding: '24px' }}
-                  styles={{ body: { padding: '24px' } }}
-                  hoverable={!isExpired}
-                  
-                >
-                  <div className="flex flex-col h-full">
-                    <div className="mb-6">
-                      <Tag color={isExpired ? "gray" : "indigo"} className="mb-3 rounded-full px-3 py-1">
-                        {pkg.duration}
-                      </Tag>
-                      <h3 className={`text-xl font-bold ${isExpired ? 'text-gray-500' : 'text-gray-800'}`}>
-                        {pkg.name}
-                      </h3>
-                      <p className={`text-sm ${isExpired ? 'text-gray-400' : 'text-gray-600'}`}>
-                        {pkg.course}
-                      </p>
-                    </div>
-                    
-                    <div className="mb-6 space-y-4">
-                      <div>
-                        <p className={`text-xs font-medium ${isExpired ? 'text-gray-400' : 'text-gray-500'}`}>
-                          PRICE
-                        </p>
-                        <p className={`text-3xl font-bold ${isExpired ? 'text-gray-400' : 'text-indigo-600'}`}>
-                          ${pkg.price}
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center">
-                        <CalendarOutlined className={`mr-2 ${isExpired ? 'text-gray-400' : 'text-indigo-500'}`} />
-                        <span className={isExpired ? 'text-gray-400' : 'text-gray-600'}>
-                          Ends: {pkg.endDate}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <Button
-                      type={isExpired ? "default" : "primary"}
-                      block
-                      size="large"
-                      className={`mt-auto ${isExpired ? 'bg-gray-100 text-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'}`}
-                      disabled={isExpired}
-                      icon={!isExpired ? <CheckCircleOutlined /> : null}
-                    >
-                      {isExpired ? 'Paid' : 'Pay now'}
-                    </Button>
-                  </div>
-                </Card>
-              </div>
-            );
-          })}
-        </div>
+    <div className="p-3">
+      <div className="flex items-center mb-8">
+        <DollarSign className="text-3xl mr-3 text-blue-600" />
+        <h2 className="text-3xl font-semibold">Course Fee</h2>
+      </div>
+
+      <div className="w-full flex justify-center md:justify-start flex-wrap gap-6 mt-10">
+  {paymentData.map((payment, index) => (
+    <div
+      key={index}
+      className="bg-white text-black rounded-3xl p-6 sm:p-8 shadow-xl transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-2xl cursor-pointer border-t-4  border-blue-500 w-full sm:w-[360px] md:w-[340px] lg:w-[360px]"
+    >
+      <h3 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">{payment.title}</h3>
+
+      <p className="text-sm mb-4 sm:mb-6 opacity-80">{payment.description}</p>
+
+      <div className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">{payment.price}</div>
+
+      <div className="flex items-center mb-3 sm:mb-4 opacity-80">
+        <Calendar className="mr-2" />
+        <p className="text-sm">{payment.duration}</p>
+      </div>
+
+      <div className="flex items-center mb-4 sm:mb-6 opacity-70">
+        <Calendar className="mr-2" />
+        <p className="text-sm">Ends: {payment.endDate}</p>
+      </div>
+
+      <div className="flex justify-center">
+        <button className="bg-gray-100 text-black px-6 py-2 sm:px-8 sm:py-3 rounded-full font-semibold text-base sm:text-lg hover:bg-blue-500 hover:text-white transition-all duration-300 ease-in-out transform hover:scale-105">
+          Pay Now
+        </button>
       </div>
     </div>
-  );
-};
+  ))}
+</div>
 
-export default FeePaymentPage;
+    </div>
+  );
+}
+

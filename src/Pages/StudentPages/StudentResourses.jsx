@@ -1,50 +1,66 @@
-import React, { useState } from "react";
-import { Button, Card, message } from "antd";
-import {  DownloadOutlined, DeleteOutlined } from "@ant-design/icons";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { FileDown } from "lucide-react";
+import axiosInstance from "../../Axios/axiosInstance";
 
-const dummyResources = [
-    {
-        id: 1,
-        title: "JavaScript Basics",
-        fileName: "js-basics.pdf",
-        fileUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-    },
-    {
-        id: 2,
-        title: "React Guide",
-        fileName: "react-guide.pdf",
-        fileUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-    },
-];
+export default function StudentResources() {
+  const { classId } = useParams();
+  const [resources, setResources] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-const StudentResourses = () => {
-    const [resources, setResources] = useState(dummyResources);
+  useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        const res = await axiosInstance.get(`/getFilesByClassId/${classId}`);
+        setResources(res.data || []);
+        console.log(res.data);
+      } catch (err) {
+        console.error("Error fetching resources:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchResources();
+  }, [classId]);
 
-    return (
-        <div className="min-h-screen p-6 bg-gray-50">
-            <div className="flex justify-between items-center mb-6 flex-col lg:flex-row ">
-                <h2 className="text-3xl font-semibold text-blue-800 mb-5">📁 Resources</h2>
-            </div>
+  return (
+    <div className="p-8 min-h-screen">
+      <h1 className="text-3xl font-bold text-blue-600 mb-6 text-center">
+        Resources for this course {resources[0]?.classId?.courseId?.courseName}
+      </h1>
 
-            <div className="flex flex-wrap gap-4 justify-center">
-                {resources.map((res) => (
-                    <Card
-                        key={res.id}
-                        className="w-72 shadow-md border border-gray-200 hover:shadow-lg transition-all"
-                        title={res.title}
-                    >
-                        <p className="mb-4 text-gray-600 truncate">{res.fileName}</p>
-                        <div className="flex justify-center">
-                            <a href={res.fileUrl} download={res.fileName}>
-                                <Button icon={<DownloadOutlined />} type="primary">Download</Button>
-                            </a>
-                        </div>
-                    </Card>
-                ))}
-            </div>
+      {loading ? (
+        <div className="flex justify-center items-center h-[50vh]">
+          <div className="w-12 h-12 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
         </div>
-    );
-};
-
-export default StudentResourses;
+      ) : resources.length === 0 ? (
+        <p className="text-gray-600 text-center">No resources found for this course.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {resources.map((res) => (
+            <div
+              key={res._id}
+              className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-blue-500 flex flex-col justify-between"
+            >
+              <h2 className="text-xl font-semibold mb-4">{res.title}</h2>
+              <img
+                src={res.url}
+                alt={res.title}
+                className="mb-4 rounded-md object-cover h-40 w-full"
+              />
+              <a
+                href={res.url}
+                download
+                className="mt-auto flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-full transition-all duration-300"
+              >
+                <FileDown className="mr-2" size={18} />
+                Download File
+              </a>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
