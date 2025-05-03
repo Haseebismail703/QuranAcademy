@@ -35,6 +35,7 @@ export default function FeePaymentPage() {
   const handlePayNow = (paymentId) => {
     messageApi.info("Redirecting to payment gateway...");
     console.log("Initiating payment for:", paymentId);
+    // Add your payment gateway redirect logic here
   };
 
   const getStatusTag = (status) => {
@@ -107,25 +108,32 @@ export default function FeePaymentPage() {
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center text-gray-600 text-sm">
+                <div className="space-y-2 mb-4 text-sm text-gray-600">
+                  <div className="flex items-center">
                     <Calendar className="mr-2 h-4 w-4" />
-                    <span>Duration: {payment.sessionDuration} minutes/session</span>
+                    <span>Duration: {payment.sessionDuration} min/session</span>
                   </div>
-                  <div className="flex items-center text-gray-600 text-sm">
-                    <Package className="mr-2 h-4 w-4" />
-                    <span>Created: {new Date(payment.created_at).toLocaleDateString()}</span>
+                  <div>
+                    <strong>Pending Months:</strong> {payment.pendingMonths}
+                  </div>
+                  <div>
+                    <strong>Total Pending Fee:</strong> ${payment.totalPendingFee}
                   </div>
                 </div>
 
-                {/* Button logic based on payment status */}
+                <div className={`font-medium text-sm mb-3 text-center ${payment.paymentStatus === 'completed' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                  {payment.paymentStatus === 'completed'
+                    ? payment.daysRemainingText
+                    : 'Please pay your fee to activate this package'}
+                </div>
+
                 <button
                   onClick={() => handlePayNow(payment._id)}
-                  className={`w-full text-white py-2 px-4 rounded-lg font-medium transition-colors ${
-                    payment.paymentStatus === 'completed'
+                  className={`w-full text-white py-2 px-4 rounded-lg font-medium transition-colors ${payment.paymentStatus === 'completed'
                       ? 'bg-gray-400 cursor-not-allowed'
                       : 'bg-blue-600 hover:bg-blue-700'
-                  }`}
+                    }`}
                   disabled={payment.paymentStatus === 'completed'}
                 >
                   {payment.paymentStatus === 'completed' ? 'Payment Completed' : 'Pay Now'}

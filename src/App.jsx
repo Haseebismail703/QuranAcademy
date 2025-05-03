@@ -32,6 +32,7 @@ import Register from './Pages/StudentPages/Register.jsx'
 import StudentResourses from "./Pages/StudentPages/StudentResourses.jsx";
 import StudentFee from "./Pages/StudentPages/StudentFee.jsx";
 import AdminProfile from "./Pages/AdminPages/AdminProfile.jsx";
+import PaymentHistoryPage from "./Pages/StudentPages/PaymentHistory.jsx";
 
 // Lazy load components
 const Home = lazy(() => import("./Pages/HomePages/Home.jsx"));
@@ -110,7 +111,7 @@ function App() {
                   <Route path="class/resources/:classId" element={<StudentResourses />} />
                   <Route path="fee" element={<StudentFee />} />
                   <Route path ="profile" element={<StudentProfile/>}/>
-
+                <Route path="paymentHistory" element={<PaymentHistoryPage/>}/>
                 </Routes>
               </StudentLayout>
             }

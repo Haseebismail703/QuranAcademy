@@ -67,7 +67,15 @@ export const Sidebar = ({
               isMobile={isMobile}
             />
           </Link>
-
+          <Link to="/student/paymentHistory" onClick={isMobile ? toggleSidebar : undefined}>
+            <NavItem
+              icon={<CreditCard className="h-5 w-5" />}
+              text="Payment History"
+              active={isActive("/student/paymentHistory")}
+              isCollapsed={isCollapsed}
+              isMobile={isMobile}
+            />
+          </Link>
           <Link to="/student/profile" onClick={isMobile ? toggleSidebar : undefined}>
             <NavItem
               icon={<User className="h-5 w-5" />}

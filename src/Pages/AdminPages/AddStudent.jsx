@@ -79,7 +79,6 @@ const AllStudentsPage = () => {
                 classId :  classData.singleClass._id,
                 studentId: studentAddKey._id,
                 timing: selectedTimeSlot,
-                
             };
             // console.log('Payload:', payload); // Debugging line
             await axiosInstance.post('/addStudentToClass', payload);
