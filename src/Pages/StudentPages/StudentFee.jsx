@@ -114,25 +114,27 @@ export default function FeePaymentPage() {
                     <span>Duration: {payment.sessionDuration} min/session</span>
                   </div>
                   <div>
-                    <strong>Pending Months:</strong> {payment.pendingMonths}
+                    <strong>Pending Months:</strong>  {payment.monthStart === "1970-01-01T00:00:00.000Z"
+                      ? 1 : payment.pendingMonths}
                   </div>
                   <div>
-                    <strong>Total Pending Fee:</strong> ${payment.totalPendingFee}
+                    <strong>Total Pending Fee:</strong> ${payment.monthStart === "1970-01-01T00:00:00.000Z" ? payment.coursePrice : payment.totalPendingFee}
                   </div>
                 </div>
 
-                <div className={`font-medium text-sm mb-3 text-center ${payment.paymentStatus === 'completed' ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                  {payment.paymentStatus === 'completed'
-                    ? payment.daysRemainingText
-                    : 'Please pay your fee to activate this package'}
-                </div>
+                {!(payment.paymentStatus === 'completed' || new Date(payment.monthStart).getTime() === 0) && (
+                  <div className="font-medium text-sm mb-3 text-center text-red-600">
+                    Please pay your fee to activate this package
+                  </div>
+                )}
+
+
 
                 <button
                   onClick={() => handlePayNow(payment._id)}
                   className={`w-full text-white py-2 px-4 rounded-lg font-medium transition-colors ${payment.paymentStatus === 'completed'
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700'
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700'
                     }`}
                   disabled={payment.paymentStatus === 'completed'}
                 >
