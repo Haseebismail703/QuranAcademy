@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { CameraIcon, PencilAltIcon, MailIcon, LockClosedIcon, UserIcon, SaveIcon, ShieldCheckIcon } from '@heroicons/react/outline';
+// import { CameraIcon, PencilAltIcon, MailIcon, LockClosedIcon, UserIcon, SaveIcon, ShieldCheckIcon } from '@heroicons/react/outline';
+import {
+  CameraOutlined,
+  EditOutlined,
+  MailOutlined,
+  LockOutlined,
+  UserOutlined,
+  SaveOutlined,
+  SafetyOutlined,
+} from '@ant-design/icons';
+
 import axiosInstance from '../../Axios/axiosInstance';
 import { message } from 'antd'
 const AdminProfile = () => {
@@ -187,7 +197,7 @@ const AdminProfile = () => {
                 {/* Camera upload button */}
                 {isEditing &&
                 <label className="absolute bottom-0 right-0 bg-indigo-600 p-3 rounded-full cursor-pointer shadow-lg border-2 border-white transform transition-all duration-300">
-                  <CameraIcon className="h-5 w-5 text-white" />
+                  <CameraOutlined style={{ fontSize: 20, color: 'white' }} />
                   <input
                     type="file"
                     accept="image/*"
@@ -201,7 +211,7 @@ const AdminProfile = () => {
 
               </div>
               <div className="flex items-center mt-1 text-gray-600">
-                <MailIcon className="h-4 w-4 mr-1" />
+              <MailOutlined className="mr-1" />
                 <span>{profileData.email}</span>
               </div>
 
@@ -214,7 +224,7 @@ const AdminProfile = () => {
                   <>Cancel Editing</>
                 ) : (
                   <>
-                    <PencilAltIcon className="h-4 w-4 mr-2" />
+                    <EditOutlined className="mr-2" />
                     Edit Profile
                   </>
                 )}
@@ -228,7 +238,7 @@ const AdminProfile = () => {
                 disabled={loading}
                 className={`w-full text-left px-4 py-3 rounded-xl flex items-center ${activeTab === 'profile' ? 'bg-indigo-600 text-white' : 'hover:bg-white hover:bg-opacity-30 text-gray-700'} transition-all duration-200`}
               >
-                <UserIcon className="h-5 w-5 mr-3" />
+                	<UserOutlined className="mr-3" />
                 <span className="font-medium">Personal Information</span>
               </button>
 
@@ -237,7 +247,7 @@ const AdminProfile = () => {
                 disabled={loading}
                 className={`w-full text-left px-4 py-3 rounded-xl flex items-center ${activeTab === 'security' ? 'bg-indigo-600 text-white' : 'hover:bg-white hover:bg-opacity-30 text-gray-700'} transition-all duration-200`}
               >
-                <ShieldCheckIcon className="h-5 w-5 mr-3" />
+               	<SafetyOutlined className="mr-3" />
                 <span className="font-medium">Security</span>
               </button>
             </div>
@@ -343,7 +353,7 @@ const AdminProfile = () => {
                       </svg>
                     ) : (
                       <>
-                        <SaveIcon className="h-5 w-5 mr-2" />
+                        <SaveOutlined className="mr-2" />
                         Save Changes
                       </>
                     )}
@@ -368,7 +378,7 @@ const AdminProfile = () => {
                         className="w-full px-4 py-3 bg-white bg-opacity-50 rounded-xl border border-white border-opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 pr-10"
                         disabled={loading}
                       />
-                      <LockClosedIcon className="h-5 w-5 text-gray-500 absolute right-3 top-3" />
+                      	<LockOutlined className="mr-2" />
                     </div>
                   </div>
 
@@ -384,7 +394,7 @@ const AdminProfile = () => {
                         className="w-full px-4 py-3 bg-white bg-opacity-50 rounded-xl border border-white border-opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 pr-10"
                         disabled={loading}
                       />
-                      <LockClosedIcon className="h-5 w-5 text-gray-500 absolute right-3 top-3" />
+                      	<LockOutlined className="mr-2" />
                     </div>
                   </div>
 
@@ -400,7 +410,7 @@ const AdminProfile = () => {
                         className="w-full px-4 py-3 bg-white bg-opacity-50 rounded-xl border border-white border-opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 pr-10"
                         disabled={loading}
                       />
-                      <LockClosedIcon className="h-5 w-5 text-gray-500 absolute right-3 top-3" />
+                      	<LockOutlined className="mr-2" />
                     </div>
                   </div>
 
@@ -438,7 +448,7 @@ const AdminProfile = () => {
                       </svg>
                     ) : (
                       <>
-                        <LockClosedIcon className="h-5 w-5 mr-2" />
+                        	<LockOutlined className="mr-2" />
                         Update Password
                       </>
                     )}

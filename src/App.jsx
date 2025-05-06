@@ -33,6 +33,9 @@ import StudentResourses from "./Pages/StudentPages/StudentResourses.jsx";
 import StudentFee from "./Pages/StudentPages/StudentFee.jsx";
 import AdminProfile from "./Pages/AdminPages/AdminProfile.jsx";
 import PaymentHistoryPage from "./Pages/StudentPages/PaymentHistory.jsx";
+import CareersPage from "./Pages/AdminPages/ManageCareer.jsx";
+import AdminChat from "./Pages/AdminPages/AdminChat.jsx";
+import StudentChat from "./Pages/StudentPages/StudentChat.jsx";
 
 // Lazy load components
 const Home = lazy(() => import("./Pages/HomePages/Home.jsx"));
@@ -78,6 +81,9 @@ function App() {
                   <Route path="manage-package" element={<ManagePackage />} />
                   <Route path="notification" element={<SendNotification />} />
                   <Route path ="profile" element={<AdminProfile/>}/>
+                  <Route path ="career" element={<CareersPage/>}/>
+                  <Route path ="chat" element={<AdminChat/>}/>
+                  
                 </Routes>
               </AdminLayout>
             }
@@ -112,6 +118,8 @@ function App() {
                   <Route path="fee" element={<StudentFee />} />
                   <Route path ="profile" element={<StudentProfile/>}/>
                 <Route path="paymentHistory" element={<PaymentHistoryPage/>}/>
+                <Route path="chat" element={<StudentChat/>}/>
+
                 </Routes>
               </StudentLayout>
             }

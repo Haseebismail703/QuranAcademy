@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { CameraIcon, PencilAltIcon, MailIcon, LockClosedIcon, UserIcon, SaveIcon, ShieldCheckIcon } from '@heroicons/react/outline';
+import { CameraOutlined, EditOutlined, MailOutlined, LockOutlined, UserOutlined, SaveOutlined, SafetyOutlined } from '@ant-design/icons';
 import axiosInstance from '../../Axios/axiosInstance';
-import { message } from 'antd'
+import { message } from 'antd';
+
 const TeacherProfile = () => {
   const [profileData, setProfileData] = useState({});
   const [imageUrl, setImageUrl] = useState('https://randomuser.me/api/portraits/women/65.jpg');
@@ -18,24 +19,21 @@ const TeacherProfile = () => {
   const [success, setSuccess] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
 
-
-  // get single user 
+  // get single user
   let getUser = async () => {
     try {
-      let res = await axiosInstance.get('/getProfile/6809e7a4ba4ffa4f777954b9')
+      let res = await axiosInstance.get('/getProfile/6809e7a4ba4ffa4f777954b9');
       if (res.status === 200) {
-        setProfileData(res.data)
-        console.log(res.data)
+        setProfileData(res.data);
+        console.log(res.data);
       }
-
     } catch (error) {
-      message.error(error || 'Somthing went wrong')
+      message.error(error || 'Something went wrong');
     }
-  }
+  };
   useEffect(() => {
-    getUser()
-  }, [])
-
+    getUser();
+  }, []);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -52,7 +50,7 @@ const TeacherProfile = () => {
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
-    setProfileData(prev => ({
+    setProfileData((prev) => ({
       ...prev,
       [name]: value
     }));
@@ -60,7 +58,7 @@ const TeacherProfile = () => {
 
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
-    setPasswordData(prev => ({
+    setPasswordData((prev) => ({
       ...prev,
       [name]: value
     }));
@@ -89,14 +87,14 @@ const TeacherProfile = () => {
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+            'Content-Type': 'multipart/form-data'
+          }
         }
       );
 
       // Update state with response data
       if (response.data.user) {
-        setProfileData(prev => ({
+        setProfileData((prev) => ({
           ...prev,
           firstName: response.data.user.firstName,
           lastName: response.data.user.lastName,
@@ -152,7 +150,6 @@ const TeacherProfile = () => {
     <div className="bg-gradient-to-br flex items-center justify-center">
       {/* Glass Container */}
       <div className="w-full max-w-5xl bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-3xl shadow-2xl border border-white border-opacity-20 overflow-hidden">
-
         {/* Header Section */}
         <div className="bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500 p-8 relative overflow-hidden">
           {/* Decorative elements */}
@@ -176,32 +173,28 @@ const TeacherProfile = () => {
               <div className="relative group mb-6">
                 <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white border-opacity-50 shadow-lg">
                   <img
-                    src={profileData.
-                      profileUrl
-                    }
+                    src={profileData?.profileUrl}
                     alt="Profile"
                     className="w-full h-full object-cover"
                   />
                 </div>
 
                 {/* Camera upload button */}
-                {isEditing &&
-                <label className="absolute bottom-0 right-0 bg-indigo-600 p-3 rounded-full cursor-pointer shadow-lg border-2 border-white transform transition-all duration-300">
-                  <CameraIcon className="h-5 w-5 text-white" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageChange}
-                    disabled={loading || !isEditing}
-                  />
-                </label>
-                }
-
-
+                {isEditing && (
+                  <label className="absolute bottom-0 right-0 bg-indigo-600 p-3 rounded-full cursor-pointer shadow-lg border-2 border-white transform transition-all duration-300">
+                    <CameraOutlined className="text-white" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageChange}
+                      disabled={loading || !isEditing}
+                    />
+                  </label>
+                )}
               </div>
               <div className="flex items-center mt-1 text-gray-600">
-                <MailIcon className="h-4 w-4 mr-1" />
+                <MailOutlined className="mr-1" />
                 <span>{profileData.email}</span>
               </div>
 
@@ -214,7 +207,7 @@ const TeacherProfile = () => {
                   <>Cancel Editing</>
                 ) : (
                   <>
-                    <PencilAltIcon className="h-4 w-4 mr-2" />
+                    <EditOutlined className="mr-2" />
                     Edit Profile
                   </>
                 )}
@@ -228,7 +221,7 @@ const TeacherProfile = () => {
                 disabled={loading}
                 className={`w-full text-left px-4 py-3 rounded-xl flex items-center ${activeTab === 'profile' ? 'bg-indigo-600 text-white' : 'hover:bg-white hover:bg-opacity-30 text-gray-700'} transition-all duration-200`}
               >
-                <UserIcon className="h-5 w-5 mr-3" />
+                <UserOutlined className="h-5 w-5 mr-3" />
                 <span className="font-medium">Personal Information</span>
               </button>
 
@@ -237,7 +230,7 @@ const TeacherProfile = () => {
                 disabled={loading}
                 className={`w-full text-left px-4 py-3 rounded-xl flex items-center ${activeTab === 'security' ? 'bg-indigo-600 text-white' : 'hover:bg-white hover:bg-opacity-30 text-gray-700'} transition-all duration-200`}
               >
-                <ShieldCheckIcon className="h-5 w-5 mr-3" />
+                <SaveOutlined className="h-5 w-5 mr-3" />
                 <span className="font-medium">Security</span>
               </button>
             </div>
@@ -343,7 +336,7 @@ const TeacherProfile = () => {
                       </svg>
                     ) : (
                       <>
-                        <SaveIcon className="h-5 w-5 mr-2" />
+                        <SaveOutlined className="h-5 w-5 mr-2" />
                         Save Changes
                       </>
                     )}

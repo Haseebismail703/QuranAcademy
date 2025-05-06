@@ -64,6 +64,11 @@ const menuItems = [
   },
   {
     key: '7',
+    icon: <UserOutlined />,
+    label: <Link to="/admin/career">Career</Link>, // Added Career menu item
+  },
+  {
+    key: '8',
     icon: <LogoutOutlined style={{ color: 'red' }} />,
     label: 'Logout',
     danger: true,
