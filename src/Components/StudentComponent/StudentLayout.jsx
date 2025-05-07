@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Sidebar } from "./StudentDashbaord/Sidebar";
 import { Header } from "./StudentDashbaord/Header";
-
+import StudentChat from '../../Components/StudentComponent/StudentChat'
 
 export default function DashboardLayout({children}) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -45,6 +45,7 @@ export default function DashboardLayout({children}) {
         <Header toggleSidebar={toggleSidebar} />
         <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
           {children}
+          <StudentChat/>
         </main>
       </div>
     </div>

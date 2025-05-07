@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import io from "socket.io-client";
 import axios from "axios";
-
+import { Avatar } from 'antd'
 const socket = io("http://localhost:5000");
 
 const AdminChat = () => {
@@ -10,15 +10,25 @@ const AdminChat = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [messages, setMessages] = useState([]);
     const [message, setMessage] = useState("");
+    const bottomRef = useRef(null);
 
     useEffect(() => {
         socket.emit("register", userId);
         fetchUsers();
     }, []);
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 100); // 100ms delay ensures DOM is ready
+
+        return () => clearTimeout(timeout);
+    }, [messages]);
+
 
     const fetchUsers = async () => {
         try {
             const { data } = await axios.get("http://localhost:5000/api/allUser");
+            console.log(data)
             setUsers(data.filter((user) => user._id !== userId));
         } catch (error) {
             console.error("Error fetching users:", error);
@@ -37,7 +47,15 @@ const AdminChat = () => {
 
     const sendMessage = () => {
         if (!message.trim()) return;
-        const newMessage = { senderId: userId, receiverId: selectedUser, content: message };
+
+
+        const newMessage = {
+            sender: userId,
+            receiver: selectedUser,
+            content: message
+        };
+
+
         socket.emit("sendMessage", newMessage);
         setMessages([...messages, newMessage]);
         setMessage("");
@@ -63,22 +81,39 @@ const AdminChat = () => {
                         {users.map((user) => (
                             <li
                                 key={user._id}
-                                className={`p-4 hover:bg-blue-50 cursor-pointer transition-colors ${
-                                    user._id === selectedUser ? "bg-blue-100" : ""
-                                }`}
+                                className={`p-4 hover:bg-blue-50 cursor-pointer transition-colors ${user._id === selectedUser ? "bg-blue-100" : ""}`}
                                 onClick={() => fetchMessages(user._id)}
                             >
                                 <div className="flex items-center">
-                                    <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
-                                        {user.firstName.charAt(0)}
+                                    <div className="h-10 w-10">
+                                        {user.profileUrl ? (
+                                            <Avatar
+                                                size="large"
+                                                src={user.profileUrl}
+                                            />
+                                        ) : (
+                                            <Avatar
+                                                size="large"
+                                                style={{
+                                                    backgroundColor: "#87d068",
+                                                    verticalAlign: "middle",
+                                                    fontSize: "18px",
+                                                }}
+                                            >
+                                                {user.gender === "male" ? "👨" : user.gender === "female" ? "👩" : "👤"}
+                                            </Avatar>
+                                        )}
                                     </div>
                                     <div className="ml-3">
-                                        <p className="text-sm font-medium text-gray-900">{user.firstName} {user.lastName}</p>
+                                        <p className="text-sm font-medium text-gray-900">
+                                            {user.firstName} {user.lastName}
+                                        </p>
                                         <p className="text-xs text-gray-500">@{user.username}</p>
                                     </div>
                                 </div>
                             </li>
                         ))}
+
                     </ul>
                 </div>
             </div>
@@ -100,26 +135,25 @@ const AdminChat = () => {
                                 {messages.map((msg, idx) => (
                                     <div
                                         key={idx}
-                                        className={`flex ${
-                                            msg.sender === userId ? "justify-end" : "justify-start"
-                                        }`}
+                                        className={`flex ${msg.sender === userId ? "justify-end" : "justify-start"
+                                            }`}
                                     >
                                         <div
-                                            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                                                msg.sender === userId
+                                            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${msg.sender === userId
                                                     ? "bg-blue-500 text-white rounded-br-none"
                                                     : "bg-white text-gray-800 rounded-bl-none border border-gray-200"
-                                            }`}
+                                                }`}
                                         >
                                             <p>{msg.content}</p>
-                                            <p className={`text-xs mt-1 ${
-                                                msg.sender === userId ? "text-blue-100" : "text-gray-500"
-                                            }`}>
+                                            <p className={`text-xs mt-1 ${msg.sender === userId ? "text-blue-100" : "text-gray-500"
+                                                }`}>
                                                 {new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </p>
                                         </div>
                                     </div>
+
                                 ))}
+                                <div ref={bottomRef} />
                             </div>
                         </div>
 
