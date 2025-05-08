@@ -26,7 +26,7 @@ import {
   Typography
 } from 'antd';
 import { Link ,useLocation,useNavigate} from 'react-router-dom';
-
+import TeacherChat from '../../Components/TeacherComponent/TeacherChat'
 const { Header, Content, Footer, Sider } = Layout;
 const { useBreakpoint } = Grid;
 const { Text } = Typography;
@@ -324,6 +324,7 @@ const TeacherLayout = ({ children }) => {
             }}
           >
             {children}
+            <TeacherChat/>
           </div>
         </Content>
 

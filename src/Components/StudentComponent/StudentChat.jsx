@@ -12,7 +12,7 @@ import axios from "axios";
 const socket = io("http://localhost:5000");
 
 const StudentChat = () => {
-    const userId = "6809e7a4ba4ffa4f777954b9";
+    const userId = "681c8fdc6329587244535349";
     const [showUsers, setShowUsers] = useState(false);
     const [showChats, setShowChats] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
@@ -56,7 +56,7 @@ const StudentChat = () => {
             const { data } = await axios.get(
                 `http://localhost:5000/api/messages/${userId}/${receiverId}`
             );
-            setMessages(data);
+            setMessages(data.messages);
             setSelectedUser(receiverId);
             setShowUsers(false);
             setShowChats(true);

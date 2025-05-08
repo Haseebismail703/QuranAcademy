@@ -15,7 +15,7 @@ const ManageClass = () => {
     const [classes, setClasses] = useState([]);
     const [singleClass, setSingleClass] = useState(null)
     // Dummy data for dropdowns
-    const teachers = ['6809e7fdba4ffa4f777954c0'];
+    const teachers = ['681c8fec632958724453534e'];
     console.log(singleClass);
 
     const timings = [

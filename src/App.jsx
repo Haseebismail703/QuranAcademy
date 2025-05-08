@@ -81,12 +81,14 @@ function App() {
                   <Route path="notification" element={<SendNotification />} />
                   <Route path ="profile" element={<AdminProfile/>}/>
                   <Route path ="career" element={<CareersPage/>}/>
-                  <Route path ="chat" element={<AdminChat/>}/>
+                  
                   
                 </Routes>
               </AdminLayout>
             }
           />
+          {/* Admin chat */}
+          <Route path ="chat" element={<AdminChat/>}/>
           {/* Teacher Routes */}
           <Route
             path="/teacher/*"
