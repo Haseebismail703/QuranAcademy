@@ -11,7 +11,7 @@ export default function StudentClass() {
   const [error, setError] = useState(null);
   const [messageApi, contextHolder] = message.useMessage();
 
-  const studentId = "6809e7a4ba4ffa4f777954b9";
+  const studentId = "681c8fdc6329587244535349";
 
   useEffect(() => {
     const fetchClasses = async () => {

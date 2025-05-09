@@ -15,7 +15,7 @@ const Class = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        axiosInstance.get("/getClassByTeacherId/6809e7fdba4ffa4f777954c0")
+        axiosInstance.get("/getClassByTeacherId/681c8fec632958724453534e")
             .then((res) => {
                 setClasses(res.data);
                 console.log(res.data);
