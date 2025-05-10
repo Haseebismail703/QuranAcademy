@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Avatar, message as AntMessage, Badge, notification } from "antd";
-import {MessageOutlined,CloseOutlined,ArrowLeftOutlined,SendOutlined,SmileOutlined} from "@ant-design/icons";
+import { MessageOutlined, CloseOutlined, ArrowLeftOutlined, SendOutlined, SmileOutlined } from "@ant-design/icons";
 import io from "socket.io-client";
 import useSound from 'use-sound';
 import axiosInstance from '../../Axios/axiosInstance.js';
@@ -31,6 +31,7 @@ const Chat = ({ id, path, sound }) => {
   const fetchUsers = useCallback(async () => {
     try {
       const { data } = await axiosInstance.get(`${path}/${userId}`);
+      console.log(data)
       const studentList = data.users?.filter((user) => user._id !== userId) || [];
       const totalUnread = studentList.reduce(
         (sum, user) => sum + (user.unreadMessages || 0),
@@ -254,14 +255,16 @@ const Chat = ({ id, path, sound }) => {
   useEffect(() => {
     socket.emit("register", userId);
     socket.on("receiveMessage", handleReceiveMessage);
-    fetchUsers();
+    // fetchUsers();
 
     return () => {
       socket.off("receiveMessage", handleReceiveMessage);
     };
   }, [userId, handleReceiveMessage, fetchUsers]);
 
-
+  useEffect(() => {
+    fetchUsers();
+  }, [])
   useEffect(() => {
     socket.on("messageRead", ({ senderId }) => {
       setUsers(prevUsers =>

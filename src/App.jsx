@@ -34,7 +34,6 @@ import StudentFee from "./Pages/StudentPages/StudentFee.jsx";
 import AdminProfile from "./Pages/AdminPages/AdminProfile.jsx";
 import PaymentHistoryPage from "./Pages/StudentPages/PaymentHistory.jsx";
 import CareersPage from "./Pages/AdminPages/ManageCareer.jsx";
-import AdminChat from "./Pages/AdminPages/AdminChat.jsx";
 
 // Lazy load components
 const Home = lazy(() => import("./Pages/HomePages/Home.jsx"));
@@ -87,8 +86,6 @@ function App() {
               </AdminLayout>
             }
           />
-          {/* Admin chat */}
-          <Route path ="chat" element={<AdminChat/>}/>
           {/* Teacher Routes */}
           <Route
             path="/teacher/*"

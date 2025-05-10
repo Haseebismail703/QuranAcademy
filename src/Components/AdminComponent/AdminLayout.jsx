@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   DashboardOutlined,
   UserAddOutlined,
@@ -25,12 +25,12 @@ import {
   Space,
   Typography
 } from 'antd';
-import { Link ,useLocation,useNavigate} from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const { Header, Content, Footer, Sider } = Layout;
 const { useBreakpoint } = Grid;
 const { Text } = Typography;
-
+import AdminChat from '../../Pages/AdminPages/AdminChat';
 const menuItems = [
   {
     key: '1',
@@ -206,7 +206,7 @@ const AdminLayout = ({ children }) => {
     const matchedMenuItem = menuItems.find(item => item.label.props?.to.includes(currentPath));
     setSelectedKey(matchedMenuItem ? matchedMenuItem.key : "dashboard");
     document.body.style.backgroundColor = "#f4f6f8";
-}, [location.pathname]);
+  }, [location.pathname]);
 
   return (
     <Layout hasSider>
@@ -253,7 +253,7 @@ const AdminLayout = ({ children }) => {
             theme="light"
             mode="inline"
             selectedKeys={[selectedKey]}
-          onClick={(e) => setSelectedKey(e.key)}
+            onClick={(e) => setSelectedKey(e.key)}
             items={menuItems}
             style={{
               fontSize: '16px',
@@ -328,6 +328,7 @@ const AdminLayout = ({ children }) => {
             }}
           >
             {children}
+            <AdminChat />
           </div>
         </Content>
 
