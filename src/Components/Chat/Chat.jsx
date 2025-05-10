@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Avatar, message as AntMessage, Badge, notification } from "antd";
 import {
   MessageOutlined,
@@ -40,7 +40,7 @@ const Chat = ({ id, path, sound }) => {
       const { data } = await axiosInstance.get(`${path}/${userId}`);
       const studentList = data.users?.filter((user) => user._id !== userId) || [];
       const totalUnread = studentList.reduce(
-        (sum, user) => sum + (user.unreadMessages || 0), 
+        (sum, user) => sum + (user.unreadMessages || 0),
         0
       );
       setUsers(studentList);
@@ -48,40 +48,49 @@ const Chat = ({ id, path, sound }) => {
     } catch (error) {
       console.error("Error fetching users:", error);
     }
-  }, [path, userId]);
+  }, [userId, path]);
+
+  const markMessagesAsRead = useCallback((receiverId) => {
+    // Update local state for immediate UI update (set all unread messages to 0)
+    setUsers(prevUsers =>
+      prevUsers.map(u =>
+        u._id === receiverId ? { ...u, unreadMessages: 0 } : u
+      )
+    );
+
+    // Notify server to mark messages as read
+    socket.emit("markAsRead", {
+      sender: receiverId,
+      receiver: userId
+    });
+
+    // Reset unread count for the selected user
+    setUnreadCount(prevCount => users.reduce(
+      (sum, user) => sum + (user.unreadMessages || 0),
+      0
+    ));
+  }, [userId, users]);
+
+
 
   const fetchMessages = useCallback(async (receiverId) => {
     try {
       const { data } = await axiosInstance.get(`/messages/${userId}/${receiverId}`);
       setMessages(data.messages);
 
+      // Mark all messages as read when opening chat
+      markMessagesAsRead(receiverId);
+
       const targetUser = users.find(user => user._id === receiverId);
       if (targetUser) {
-        setSelectedUser(targetUser._id);
+        setSelectedUser(receiverId);
         setShowChats(true);
         setShowUsers(false);
-
-        socket.emit("markAsRead", { 
-          sender: receiverId, 
-          receiver: userId 
-        });
-
-        setUsers(prevUsers =>
-          prevUsers.map(u =>
-            u._id === receiverId ? { ...u, unreadMessages: 0 } : u
-          )
-        );
-
-        const remainingUnread = users.reduce((count, u) => {
-          if (u._id === receiverId) return count;
-          return count + (u.unreadMessages || 0);
-        }, 0);
-        setUnreadCount(remainingUnread);
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
     }
-  }, [userId, users]);
+  }, [userId, users, markMessagesAsRead]);
 
   const handleReceiveMessage = useCallback((newMessage) => {
     if (messageHandledRef.current) return;
@@ -123,6 +132,130 @@ const Chat = ({ id, path, sound }) => {
     }, 100);
   }, [selectedUser, users, sound, api, scrollToBottom]);
 
+//   let handleDelete = (data,index) =>{
+//     console.log(index)
+//      socket.emit("unsendLastMessage", {
+//       content : data.content,
+//       sender: data.sender,
+//       receiver: data.receiver,
+//       index : index 
+//     });
+//     console.log(messages)
+//   }
+
+// useEffect(() => {
+//   socket.on("messageUnsent", ({ index, content }) => {
+//     setMessages(prevMessages => {
+//       const updatedMessages = [...prevMessages];
+//       if (updatedMessages[index]) {
+//         updatedMessages[index] = {
+//           ...updatedMessages[index],
+//           content: content
+//         };
+//       }
+//       return updatedMessages;
+//     });
+//   });
+
+//   return () => {
+//     socket.off("messageUnsent");
+//   };
+// }, []);
+
+
+
+
+  // Memoize user list to prevent unnecessary re-renders
+  const userList = useMemo(() => (
+    users.map((user) => (
+      <div
+        key={user._id}
+        onClick={() => fetchMessages(user._id)}
+        className="flex items-center gap-1 p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors duration-200"
+      >
+        <Badge
+          dot={user.unreadMessages > 0}
+          offset={[-5, 30]}
+          color="red"
+        >
+          <Avatar size="large" src={user.profileUrl || null}>
+            {user.gender === "male" ? "👨" : user.gender === "female" ? "👩" : "👤"}
+          </Avatar>
+        </Badge>
+        <div className="ml-2 flex-1">
+          <div className="flex justify-between items-center">
+            <p className="font-medium">{user.firstName} {user.lastName}</p>
+            {user.unreadMessages > 0 && (
+              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                {user.unreadMessages}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 capitalize">{user.role || "No Role"}</p>
+        </div>
+      </div>
+    ))
+  ), [users, fetchMessages]);
+
+  // Memoize message list to prevent unnecessary re-renders
+  const messageList = useMemo(() => (
+    messages.map((msg, index) => {
+      const isSender = msg.sender === userId;
+      const messageTime = new Date(msg.timestamp);
+      const currentTime = new Date();
+      const timeDifference = (currentTime - messageTime) / 1000;
+      const showDeleteIcon = isSender && timeDifference <= 10 && msg.content !== "Message Deleted";
+
+      return (
+        <div
+          key={`${msg._id || index}-${msg.timestamp}`}
+          className={`flex mb-3 group ${isSender ? "justify-end" : "justify-start"
+            } animate-fade-in`}
+        >
+          <div
+            className={`max-w-xs px-3 py-2 rounded-lg relative ${isSender
+              ? "bg-blue-500 text-white rounded-br-none"
+              : "bg-gray-200 text-black rounded-bl-none"
+              }`}
+          >
+            {showDeleteIcon && (
+              <button
+                onClick={() => handleDelete(msg,index)}
+                className="absolute -left-6 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 text-red-500 hover:text-red-700 cursor-pointer"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </button>
+            )}
+
+            <div className="text-sm">{msg.content}</div>
+            <div
+              className={`text-xs mt-1 text-right ${isSender ? "text-blue-100" : "text-gray-500"
+                }`}
+            >
+              {messageTime.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    })
+  ), [messages, userId]);
+
   useEffect(() => {
     socket.emit("register", userId);
     socket.on("receiveMessage", handleReceiveMessage);
@@ -133,6 +266,7 @@ const Chat = ({ id, path, sound }) => {
     };
   }, [userId, handleReceiveMessage, fetchUsers]);
 
+
   useEffect(() => {
     socket.on("messageRead", ({ senderId }) => {
       setUsers(prevUsers =>
@@ -140,9 +274,9 @@ const Chat = ({ id, path, sound }) => {
           u._id === senderId ? { ...u, unreadMessages: 0 } : u
         )
       );
-      
-      setUnreadCount(prevUsers => prevUsers.reduce(
-        (sum, user) => sum + (user.unreadMessages || 0), 
+
+      setUnreadCount(prevCount => users.reduce(
+        (sum, user) => sum + (user.unreadMessages || 0),
         0
       ));
     });
@@ -150,7 +284,7 @@ const Chat = ({ id, path, sound }) => {
     return () => {
       socket.off("messageRead");
     };
-  }, []);
+  }, [users]);
 
   useEffect(() => {
     scrollToBottom();
@@ -200,11 +334,10 @@ const Chat = ({ id, path, sound }) => {
               setShowUsers((prev) => !prev);
               setShowChats(false);
             }}
-            className={`cursor-pointer w-14 h-14 bg-blue-500 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-blue-600 transition-all duration-300 transform ${
-              showUsers || showChats
-                ? "rotate-0 scale-100"
-                : "hover:rotate-12 hover:scale-110"
-            }`}
+            className={`cursor-pointer w-14 h-14 bg-blue-500 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-blue-600 transition-all duration-300 transform ${showUsers || showChats
+              ? "rotate-0 scale-100"
+              : "hover:rotate-12 hover:scale-110"
+              }`}
           >
             <MessageOutlined className="text-xl" />
             {unreadCount > 0 && (
@@ -216,11 +349,10 @@ const Chat = ({ id, path, sound }) => {
 
       {/* Users Panel */}
       <div
-        className={`fixed bottom-24 right-6 w-80 bg-white rounded-t-lg shadow-xl z-40 border border-gray-200 transition-all duration-300 transform ${
-          showUsers
-            ? "translate-y-0 opacity-100"
-            : "translate-y-10 opacity-0 pointer-events-none"
-        }`}
+        className={`fixed bottom-24 right-6 w-80 bg-white rounded-t-lg shadow-xl z-40 border border-gray-200 transition-all duration-300 transform ${showUsers
+          ? "translate-y-0 opacity-100"
+          : "translate-y-10 opacity-0 pointer-events-none"
+          }`}
       >
         <div className="bg-blue-500 text-white p-3 rounded-t-lg flex justify-between items-center">
           <h3 className="font-semibold">Chat with</h3>
@@ -263,17 +395,19 @@ const Chat = ({ id, path, sound }) => {
 
       {/* Chat Panel */}
       <div
-        className={`fixed bottom-24 right-6 w-80 bg-white rounded-t-lg shadow-xl z-40 border border-gray-200 transition-all duration-300 transform ${
-          showChats
-            ? "translate-y-0 opacity-100"
-            : "translate-y-10 opacity-0 pointer-events-none"
-        }`}
+        className={`fixed bottom-24 right-6 w-80 bg-white rounded-t-lg shadow-xl z-40 border border-gray-200 transition-all duration-300 transform ${showChats
+          ? "translate-y-0 opacity-100"
+          : "translate-y-10 opacity-0 pointer-events-none"
+          }`}
       >
         <div className="bg-blue-500 text-white p-3 rounded-t-lg flex items-center">
           <button
             onClick={() => {
               setShowChats(false);
               setShowUsers(true);
+              if (selectedUser) {
+                markMessagesAsRead(selectedUser); 
+              }
             }}
             className="hover:bg-blue-600 p-1 rounded-full transition-colors"
           >
@@ -283,9 +417,17 @@ const Chat = ({ id, path, sound }) => {
             {users.find((u) => u._id === selectedUser)?.firstName || "User"}
           </span>
           <CloseOutlined
-            onClick={() => setShowChats(false)}
+            onClick={() => {
+              setShowChats(false); // Hide the chat UI
+              setShowUsers(true);  // Show the users list
+
+              if (selectedUser) {
+                markMessagesAsRead(selectedUser); 
+              }
+            }}
             className="cursor-pointer hover:scale-125 transition-transform"
           />
+
         </div>
         <div className="h-64 overflow-y-auto p-4 bg-gray-50">
           {messages.map((msg, index) => {
@@ -298,20 +440,18 @@ const Chat = ({ id, path, sound }) => {
             return (
               <div
                 key={`${msg._id || index}-${msg.timestamp}`}
-                className={`flex mb-3 group ${
-                  isSender ? "justify-end" : "justify-start"
-                } animate-fade-in`}
+                className={`flex mb-3 group ${isSender ? "justify-end" : "justify-start"
+                  } animate-fade-in`}
               >
                 <div
-                  className={`max-w-xs px-3 py-2 rounded-lg relative ${
-                    isSender
-                      ? "bg-blue-500 text-white rounded-br-none"
-                      : "bg-gray-200 text-black rounded-bl-none"
-                  }`}
+                  className={`max-w-xs px-3 py-2 rounded-lg relative ${isSender
+                    ? "bg-blue-500 text-white rounded-br-none"
+                    : "bg-gray-200 text-black rounded-bl-none"
+                    }`}
                 >
                   {showDeleteIcon && (
                     <button
-                      onClick={() => handleDelete(msg)}
+                      onClick={() => handleDelete(msg,index)}
                       className="absolute -left-6 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                     >
                       <svg
@@ -333,9 +473,8 @@ const Chat = ({ id, path, sound }) => {
 
                   <div className="text-sm">{msg.content}</div>
                   <div
-                    className={`text-xs mt-1 text-right ${
-                      isSender ? "text-blue-100" : "text-gray-500"
-                    }`}
+                    className={`text-xs mt-1 text-right ${isSender ? "text-blue-100" : "text-gray-500"
+                      }`}
                   >
                     {messageTime.toLocaleTimeString([], {
                       hour: "2-digit",
@@ -362,11 +501,10 @@ const Chat = ({ id, path, sound }) => {
           <button
             onClick={sendMessage}
             disabled={isSending || !message.trim()}
-            className={`p-2 rounded-full ${
-              isSending || !message.trim()
-                ? "text-gray-400"
-                : "text-blue-500 hover:text-blue-600 hover:bg-blue-100"
-            } transition-colors`}
+            className={`p-2 rounded-full ${isSending || !message.trim()
+              ? "text-gray-400"
+              : "text-blue-500 hover:text-blue-600 hover:bg-blue-100"
+              } transition-colors`}
           >
             {isSending ? (
               <span className="animate-spin">⏳</span>
