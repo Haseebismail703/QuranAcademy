@@ -1,12 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Avatar, message as AntMessage, Badge, notification } from "antd";
-import {
-  MessageOutlined,
-  CloseOutlined,
-  ArrowLeftOutlined,
-  SendOutlined,
-  SmileOutlined
-} from "@ant-design/icons";
+import {MessageOutlined,CloseOutlined,ArrowLeftOutlined,SendOutlined,SmileOutlined} from "@ant-design/icons";
 import io from "socket.io-client";
 import useSound from 'use-sound';
 import axiosInstance from '../../Axios/axiosInstance.js';
@@ -26,7 +20,6 @@ const Chat = ({ id, path, sound }) => {
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [api, contextHolder] = notification.useNotification();
-
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const messageHandledRef = useRef(false);
@@ -99,11 +92,18 @@ const Chat = ({ id, path, sound }) => {
     const senderUser = users.find(u => u._id === newMessage.sender);
     const senderName = senderUser ? `${senderUser.firstName}` : 'Unknown';
 
+    const isSender = newMessage.sender === userId;  // 👈 Add this line
+
     if (newMessage.sender === selectedUser) {
-      setMessages(prev => [...prev, newMessage]);
-      sound();
+      setMessages(prev => {
+        const exists = prev.find(msg => msg._id === newMessage._id);
+        if (exists) return prev;
+        return [...prev, newMessage];
+      });
+
+      if (!isSender) sound(); // Only play sound if you are not sender
       scrollToBottom();
-    } else {
+    } else if (!isSender) { // 👈 Only show notification if you are receiver
       setUsers(prevUsers => {
         const updatedUsers = prevUsers.map(u =>
           u._id === newMessage.sender
@@ -130,37 +130,32 @@ const Chat = ({ id, path, sound }) => {
     setTimeout(() => {
       messageHandledRef.current = false;
     }, 100);
-  }, [selectedUser, users, sound, api, scrollToBottom]);
+  }, [selectedUser, users, userId, sound, api, scrollToBottom]);
 
-//   let handleDelete = (data,index) =>{
-//     console.log(index)
-//      socket.emit("unsendLastMessage", {
-//       content : data.content,
-//       sender: data.sender,
-//       receiver: data.receiver,
-//       index : index 
-//     });
-//     console.log(messages)
-//   }
 
-// useEffect(() => {
-//   socket.on("messageUnsent", ({ index, content }) => {
-//     setMessages(prevMessages => {
-//       const updatedMessages = [...prevMessages];
-//       if (updatedMessages[index]) {
-//         updatedMessages[index] = {
-//           ...updatedMessages[index],
-//           content: content
-//         };
-//       }
-//       return updatedMessages;
-//     });
-//   });
+  const handleDelete = (data) => {
+    socket.emit("unsendLastMessage", {
+      _id: data._id, // this is the actual MongoDB document id
+      sender: data.sender,
+      receiver: data.receiver,
+    });
+  };
 
-//   return () => {
-//     socket.off("messageUnsent");
-//   };
-// }, []);
+
+  useEffect(() => {
+    socket.on("messageUnsent", ({ _id, content }) => {
+      setMessages(prevMessages =>
+        prevMessages.map(msg =>
+          msg._id === _id ? { ...msg, content } : msg
+        )
+      );
+    });
+
+    return () => {
+      socket.off("messageUnsent");
+    };
+  }, []);
+
 
 
 
@@ -220,7 +215,7 @@ const Chat = ({ id, path, sound }) => {
           >
             {showDeleteIcon && (
               <button
-                onClick={() => handleDelete(msg,index)}
+                onClick={() => handleDelete(msg, index)}
                 className="absolute -left-6 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
               >
                 <svg
@@ -294,19 +289,17 @@ const Chat = ({ id, path, sound }) => {
     if (!message.trim() || isSending) return;
 
     setIsSending(true);
-    const newMessage = {
+    const tempMessage = {
       sender: userId,
       receiver: selectedUser,
       content: message,
-      timestamp: new Date().toISOString(),
     };
 
     try {
-      socket.emit("sendMessage", newMessage);
-      setMessages(prev => [...prev, newMessage]);
+      // Emit to server, no local state push here!
+      socket.emit("sendMessage", tempMessage);
       setMessage("");
       playSendMessageTone();
-      await new Promise(resolve => setTimeout(resolve, 200));
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
@@ -314,6 +307,18 @@ const Chat = ({ id, path, sound }) => {
       inputRef.current?.focus();
     }
   };
+
+  // On receiveMessage — update with _id
+  useEffect(() => {
+    socket.on("receiveMessage", (messageFromDB) => {
+      setMessages(prev => [...prev, messageFromDB]); // contains _id
+    });
+
+    return () => {
+      socket.off("receiveMessage");
+    };
+  }, []);
+
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -362,34 +367,37 @@ const Chat = ({ id, path, sound }) => {
           />
         </div>
         <div className="h-96 overflow-y-auto p-2">
-          {users.map((user) => (
-            <div
-              key={user._id}
-              onClick={() => fetchMessages(user._id)}
-              className="flex items-center gap-1 p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors duration-200"
-            >
-              <Badge
-                dot={user.unreadMessages > 0}
-                offset={[-5, 30]}
-                color="red"
+          {[...users]
+            .sort((a, b) => (b.unreadMessages || 0) - (a.unreadMessages || 0))
+            .map((user) => (
+              <div
+                key={user._id}
+                onClick={() => fetchMessages(user._id)}
+                className="flex items-center gap-1 p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors duration-200"
               >
-                <Avatar size="large" src={user.profileUrl || null}>
-                  {user.gender === "male" ? "👨" : user.gender === "female" ? "👩" : "👤"}
-                </Avatar>
-              </Badge>
-              <div className="ml-2 flex-1">
-                <div className="flex justify-between items-center">
-                  <p className="font-medium">{user.firstName} {user.lastName}</p>
-                  {user.unreadMessages > 0 && (
-                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                      {user.unreadMessages}
-                    </span>
-                  )}
+                <Badge
+                  dot={user.unreadMessages > 0}
+                  offset={[-5, 30]}
+                  color="red"
+                >
+                  <Avatar size="large" src={user.profileUrl || null}>
+                    {user.gender === "male" ? "👨" : user.gender === "female" ? "👩" : "👤"}
+                  </Avatar>
+                </Badge>
+                <div className="ml-2 flex-1">
+                  <div className="flex justify-between items-center">
+                    <p className="font-medium">{user.firstName} {user.lastName}</p>
+                    {user.unreadMessages > 0 && (
+                      <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                        {user.unreadMessages}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 capitalize">{user.role || "No Role"}</p>
                 </div>
-                <p className="text-xs text-gray-500 capitalize">{user.role || "No Role"}</p>
               </div>
-            </div>
-          ))}
+            ))}
+
         </div>
       </div>
 
@@ -406,7 +414,7 @@ const Chat = ({ id, path, sound }) => {
               setShowChats(false);
               setShowUsers(true);
               if (selectedUser) {
-                markMessagesAsRead(selectedUser); 
+                markMessagesAsRead(selectedUser);
               }
             }}
             className="hover:bg-blue-600 p-1 rounded-full transition-colors"
@@ -422,7 +430,7 @@ const Chat = ({ id, path, sound }) => {
               setShowUsers(true);  // Show the users list
 
               if (selectedUser) {
-                markMessagesAsRead(selectedUser); 
+                markMessagesAsRead(selectedUser);
               }
             }}
             className="cursor-pointer hover:scale-125 transition-transform"
@@ -435,23 +443,27 @@ const Chat = ({ id, path, sound }) => {
             const messageTime = new Date(msg.timestamp);
             const currentTime = new Date();
             const timeDifference = (currentTime - messageTime) / 1000;
-            const showDeleteIcon = isSender && timeDifference <= 10 && msg.content !== "Message Deleted";
+            const isDeleted = msg.content === "This message was deleted";
+            const showDeleteIcon = isSender && timeDifference <= 10 && !isDeleted;
 
             return (
               <div
-                key={`${msg._id || index}-${msg.timestamp}`}
-                className={`flex mb-3 group ${isSender ? "justify-end" : "justify-start"
-                  } animate-fade-in`}
+                key={msg._id || msg.tempId}
+                className={`flex mb-3 group ${isSender ? "justify-end" : "justify-start"} animate-fade-in`}
               >
                 <div
-                  className={`max-w-xs px-3 py-2 rounded-lg relative ${isSender
-                    ? "bg-blue-500 text-white rounded-br-none"
-                    : "bg-gray-200 text-black rounded-bl-none"
+                  className={`max-w-xs px-3 py-2 rounded-lg relative 
+          ${isDeleted
+                      ? "bg-gray-300 text-gray-600 italic"
+                      : isSender
+                        ? "bg-blue-500 text-white rounded-br-none"
+                        : "bg-gray-200 text-black rounded-bl-none"
                     }`}
                 >
+                  {/* Delete Icon */}
                   {showDeleteIcon && (
                     <button
-                      onClick={() => handleDelete(msg,index)}
+                      onClick={() => handleDelete(msg, index)}
                       className="absolute -left-6 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                     >
                       <svg
@@ -471,7 +483,12 @@ const Chat = ({ id, path, sound }) => {
                     </button>
                   )}
 
-                  <div className="text-sm">{msg.content}</div>
+                  {/* Message Text */}
+                  <div className="text-sm">
+                    {msg.content}
+                  </div>
+
+                  {/* Timestamp */}
                   <div
                     className={`text-xs mt-1 text-right ${isSender ? "text-blue-100" : "text-gray-500"
                       }`}
@@ -485,6 +502,7 @@ const Chat = ({ id, path, sound }) => {
               </div>
             );
           })}
+
           <div ref={bottomRef} />
         </div>
         <div className="flex items-center p-2 border-t border-gray-300">
