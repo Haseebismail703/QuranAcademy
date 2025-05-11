@@ -105,7 +105,7 @@ const ClassNotificationPage = () => {
     <div className="p-4 bg-white rounded shadow-md">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Class Notifications</h2>
-        <Button type="primary" onClick={() => setOpen(true)}>
+        <Button disabled={notifications.length > 0} type="primary" onClick={() => setOpen(true)}>
           + Add Notification
         </Button>
       </div>
