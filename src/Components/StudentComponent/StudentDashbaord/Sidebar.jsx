@@ -85,6 +85,15 @@ export const Sidebar = ({
               isMobile={isMobile}
             />
           </Link>
+          <Link to="/student/notification" onClick={isMobile ? toggleSidebar : undefined}>
+            <NavItem
+              icon={<User className="h-5 w-5" />}
+              text="All notification"
+              active={isActive("/student/notification")}
+              isCollapsed={isCollapsed}
+              isMobile={isMobile}
+            />
+          </Link>
         </div>
       </div>
 

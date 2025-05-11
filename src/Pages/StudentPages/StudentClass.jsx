@@ -7,6 +7,7 @@ import { Tag, message } from "antd";
 export default function StudentClass() {
   const navigate = useNavigate();
   const [classes, setClasses] = useState([]);
+  const [notifications, setNotifications] = useState([]); // Store all notifications
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [messageApi, contextHolder] = message.useMessage();
@@ -19,6 +20,7 @@ export default function StudentClass() {
         setLoading(true);
         const res = await axiosInstance.get(`/getAllClassesByStudentId/${studentId}`);
         setClasses(res.data || []);
+        console.log(res.data)
       } catch (err) {
         console.error("Error fetching classes:", err);
         setError("Failed to load your classes. Please try again later.");
@@ -31,17 +33,29 @@ export default function StudentClass() {
     fetchClasses();
   }, []);
 
-  const showSuccess = (msg) => {
-    messageApi.success(msg);
-  };
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        setLoading(true);
+        const res = await axiosInstance.get(`/getClassNotification`);
+        setNotifications(res.data || []);  // Store all notifications here
+        console.log(res.data)
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+        setError("Failed to load notifications. Please try again later.");
+        showError("Failed to load notifications");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const showError = (msg) => {
-    messageApi.error(msg);
-  };
+    fetchNotifications();
+  }, []);
 
-  const handleSeeResources = (classId) => {
-    navigate(`/student/class/resources/${classId}`);
-  };
+  const showSuccess = (msg) => messageApi.success(msg);
+  const showError = (msg) => messageApi.error(msg);
+
+  const handleSeeResources = (classId) => navigate(`/student/class/resources/${classId}`);
 
   const handleCopyLink = (classId) => {
     const classData = classes.find(c => c._id === classId);
@@ -57,32 +71,21 @@ export default function StudentClass() {
 
   const renderTimingTag = (timing) => {
     if (!timing) return <Tag color="gray">Not specified</Tag>;
-    
-    // Extract time and check if it's morning/afternoon/evening
     const time = timing.split(' ')[0];
     const hour = parseInt(time.split(':')[0]);
-    
     let color = 'blue';
-    
-    if (timing.includes('AM') || (hour >= 5 && hour < 12)) {
-      color = 'gold';
-    } else if (timing.includes('PM') && hour < 5) {
-      color = 'orange';
-    } else {
-      color = 'volcano';
-    }
 
-    return (
-      <Tag color={color} className="flex items-center">
-        {timing}
-      </Tag>
-    );
+    if (timing.includes('AM') || (hour >= 5 && hour < 12)) color = 'gold';
+    else if (timing.includes('PM') && hour < 5) color = 'orange';
+    else color = 'volcano';
+
+    return <Tag color={color}>{timing}</Tag>;
   };
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
       {contextHolder}
-      
+
       <div className="flex items-center mb-8">
         <BookOpen className="h-8 w-8 mr-3 text-blue-600" />
         <h2 className="text-2xl md:text-3xl font-bold text-gray-800">My Classes</h2>
@@ -119,11 +122,21 @@ export default function StudentClass() {
             const studentData = cls.students?.find(s => s.studentId === studentId) || {};
             const timing = studentData.studentTiming || cls.classTiming;
 
+            // Find notifications for the current class
+            const noti = notifications.find(n => n.classId === cls._id);
+
             return (
               <div
                 key={cls._id}
                 className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300 w-full"
               >
+                {/* Display Notification if available for the class */}
+                {noti && noti.message && (
+                  <div className="bg-yellow-100 py-2 px-4 text-yellow-800 text-sm font-medium">
+                    <marquee scrollamount="4">{noti.title} - {noti.message}</marquee>
+                  </div>
+                )}
+
                 <div className="p-6">
                   <div className="flex items-start justify-between">
                     <div>
@@ -140,17 +153,13 @@ export default function StudentClass() {
                         {renderTimingTag(timing)}
                       </div>
                     </div>
-                    {studentData.classLink && (
-                      <Tag color="green" >
-                        Link Available
-                      </Tag>
-                    )}
+                    {studentData.classLink && <Tag color="green">Link Available</Tag>}
                   </div>
 
                   <div className="mt-6 flex flex-col sm:flex-row gap-3">
                     <button
                       onClick={() => handleSeeResources(cls._id)}
-                      className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
                     >
                       <BookOpen size={16} />
                       View Resources
@@ -159,7 +168,7 @@ export default function StudentClass() {
                     <button
                       onClick={() => handleCopyLink(cls._id)}
                       disabled={!studentData.classLink}
-                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors $(
                         studentData.classLink
                           ? 'bg-gray-100 hover:bg-gray-200 text-gray-800'
                           : 'bg-gray-100 text-gray-400 cursor-not-allowed'

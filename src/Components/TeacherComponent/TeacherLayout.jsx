@@ -42,11 +42,11 @@ const menuItems = [
     icon: <UserAddOutlined />,
     label: <Link to="/teacher/class">Class</Link>,
   },
-  // {
-  //   key: '3',
-  //   icon: <TeamOutlined />,
-  //   label: <Link to="/admin/manage-course">Manage Course</Link>,
-  // },
+  {
+    key: '3',
+    icon: <TeamOutlined />,
+    label: <Link to="/teacher/notification">All notification</Link>,
+  },
   // {
   //   key: '4',
   //   icon: <GlobalOutlined />,

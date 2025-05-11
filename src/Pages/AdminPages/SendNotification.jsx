@@ -1,214 +1,202 @@
-import React, { useState } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Tag, Card, message } from 'antd';
-import { NotificationOutlined, UserOutlined, TeamOutlined, MailOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from "react";
+import {
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  message,
+  Table,
+  Popconfirm,
+} from "antd";
+import axiosInstance from '../../Axios/axiosInstance.js'
 
 const { Option } = Select;
 const { TextArea } = Input;
 
-const SendNotification = () => {
+const NotificationPage = () => {
   const [form] = Form.useForm();
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [notifications, setNotifications] = useState([
-    {
-      id: '1',
-      title: 'Exam Schedule',
-      message: 'Final exams will begin next Monday',
-      recipients: 'All Students',
-      date: '2023-05-15',
-    },
-    {
-      id: '2',
-      title: 'Staff Meeting',
-      message: 'Monthly staff meeting tomorrow at 10 AM',
-      recipients: 'All Teachers',
-      date: '2023-05-10',
-    },
-    {
-      id: '3',
-      title: 'Holiday Announcement',
-      message: 'School will be closed for Eid holidays',
-      recipients: 'All Teachers & Students',
-      date: '2023-05-05',
+  const [notifications, setNotifications] = useState([]);
+  const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [viewModalVisible, setViewModalVisible] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState(null);
+
+  // Fetch notifications
+  const fetchNotifications = async () => {
+    try {
+      const response = await axiosInstance.get("/getAllNotification");
+      const data = response.data.map((item,index) => ({
+        ...item,index 
+      }));
+      console.log(data);
+      setNotifications(data);
+    } catch (err) {
+      message.error("Failed to fetch notifications");
     }
-  ]);
-
-  const recipientOptions = [
-    { value: 'all', label: 'All Teachers & Students' },
-    { value: 'teachers', label: 'All Teachers' },
-    { value: 'students', label: 'All Students' },
-    { value: 'custom', label: 'Custom Selection' }
-  ];
-
-  const showModal = () => {
-    form.resetFields();
-    setIsModalVisible(true);
   };
 
-  const handleSubmit = () => {
-    form.validateFields().then(values => {
-      const newNotification = {
-        id: (notifications.length + 1).toString(),
-        title: values.title,
-        message: values.message,
-        recipients: recipientOptions.find(r => r.value === values.recipients)?.label || values.recipients,
-        date: new Date().toISOString().split('T')[0],
-      };
-      setNotifications([...notifications, newNotification]);
-      message.success('Notification sent successfully!');
-      setIsModalVisible(false);
-    });
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  // Create notification
+  const handleCreate = async (values) => {
+    try {
+      await axiosInstance.post("/creatNoti", {
+        ...values,
+        expiryDate: values.expiryDate.toISOString(),
+      });
+      message.success("Notification sent");
+      setCreateModalVisible(false);
+      form.resetFields();
+      fetchNotifications();
+    } catch {
+      message.error("Failed to send notification");
+    }
+  };
+
+  // Delete notification
+  const handleDelete = async (id) => {
+    try {
+      await axiosInstance.delete(`/deleteNoti/${id}`);
+      message.success("Notification deleted");
+      fetchNotifications();
+    } catch {
+      message.error("Delete failed");
+    }
+  };
+
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return `${d.getDate().toString().padStart(2, "0")} ${d.toLocaleString("default", {
+      month: "short",
+    })} ${d.getFullYear()}, ${d.getHours().toString().padStart(2, "0")}:${d
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")} ${d.getHours() >= 12 ? "PM" : "AM"}`;
   };
 
   const columns = [
     {
-      title: 'Title',
-      dataIndex: 'title',
-      key: 'title',
-      render: (text) => <span className="font-medium">{text}</span>,
+      title : "No",
+      dataIndex : "index",
+      render : (index) => <p>{index + 1}</p>
     },
     {
-      title: 'Message',
-      dataIndex: 'message',
-      key: 'message',
-      render: (text) => <div className="text-gray-600 line-clamp-1">{text}</div>,
+      title: "Title",
+      dataIndex: "title",
     },
     {
-      title: 'Recipients',
-      dataIndex: 'recipients',
-      key: 'recipients',
-      render: (recipients) => {
-        let color = 'blue';
-        if (recipients.includes('Teachers')) color = 'purple';
-        if (recipients.includes('Students')) color = 'green';
-        if (recipients.includes('&')) color = 'orange';
-        
-        return (
-          <Tag color={color} className="capitalize">
-            {recipients.includes('All') ? recipients : `To: ${recipients}`}
-          </Tag>
-        );
-      },
+      title: "For",
+      dataIndex: "forRole",
+      render: (role) => role.charAt(0).toUpperCase() + role.slice(1),
     },
     {
-      title: 'Date',
-      dataIndex: 'date',
-      key: 'date',
-      render: (date) => <span className="text-gray-500">{date}</span>,
+      title: "Expires",
+      dataIndex: "expiryDate",
+      render: (date) => formatDate(date),
+    },
+    {
+      title: "Actions",
+      render: (_, record) => (
+        <div className="flex gap-2">
+          <Button
+            onClick={() => {
+              setSelectedNotification(record);
+              setViewModalVisible(true);
+            }}
+            type="primary"
+          >
+            View
+          </Button>
+          <Popconfirm
+            title="Are you sure to delete?"
+            onConfirm={() => handleDelete(record._id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button danger type="primary">
+              Delete
+            </Button>
+          </Popconfirm>
+        </div>
+      ),
     },
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col sm:flex-row gap-4  justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Notification Center</h1>
-          <p className="text-gray-500">Send and manage notifications to teachers and students</p>
-        </div>
-        <Button
-          type="primary"
-          icon={<NotificationOutlined />}
-          onClick={showModal}
-          className="bg-blue-600 hover:bg-blue-700"
-          size="large"
-        >
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="flex justify-between items-center mb-5 md:flex-row flex-col ">
+        <h1 className="text-2xl font-bold">Notifications</h1>
+        <Button type="primary" onClick={() => setCreateModalVisible(true)}>
           Send Notification
         </Button>
       </div>
 
-      <Card className="rounded-xl shadow-sm border-0 overflow-hidden">
-        <Table
-          columns={columns}
-          dataSource={notifications}
-          rowKey="id"
-          pagination={{ pageSize: 5 }}
-          className="custom-antd-table"
-        />
-      </Card>
+      <Table
+        columns={columns}
+        dataSource={notifications}
+        rowKey="_id"
+        bordered
+        className="bg-white shadow-md"
+        scroll={{"x" : "100%"}}
+      />
 
-      {/* Notification Modal */}
+      {/* Create Notification Modal */}
       <Modal
-        title="Send New Notification"
-        visible={isModalVisible}
-        onOk={handleSubmit}
-        onCancel={() => setIsModalVisible(false)}
-        okText="Send Notification"
-        cancelText="Cancel"
-        width={700}
+        title="Create Notification"
+        open={createModalVisible}
+        onCancel={() => setCreateModalVisible(false)}
+        onOk={() => form.submit()}
+        okText="Send"
       >
-        <Form form={form} layout="vertical" className="mt-4">
-          <Form.Item
-            name="title"
-            label="Notification Title"
-            rules={[{ required: true, message: 'Please enter notification title' }]}
-          >
-            <Input 
-              prefix={<MailOutlined className="text-gray-400" />} 
-              placeholder="Enter notification title" 
-            />
+        <Form form={form} layout="vertical" onFinish={handleCreate}>
+          <Form.Item name="title" label="Title" rules={[{ required: true }]}>
+            <Input placeholder="Enter title" />
           </Form.Item>
-
-          <Form.Item
-            name="recipients"
-            label="Recipients"
-            rules={[{ required: true, message: 'Please select recipients' }]}
-          >
-            <Select placeholder="Select recipients">
-              {recipientOptions.map(option => (
-                <Option key={option.value} value={option.value}>
-                  <div className="flex items-center">
-                    {option.value === 'teachers' && <UserOutlined className="mr-2 text-purple-500" />}
-                    {option.value === 'students' && <TeamOutlined className="mr-2 text-green-500" />}
-                    {option.value === 'all' && (
-                      <>
-                        <UserOutlined className="mr-1 text-purple-500" />
-                        <TeamOutlined className="mr-2 text-green-500" />
-                      </>
-                    )}
-                    {option.label}
-                  </div>
-                </Option>
-              ))}
+          <Form.Item name="message" label="Message" rules={[{ required: true }]}>
+            <TextArea rows={4} placeholder="Enter message" />
+          </Form.Item>
+          <Form.Item name="forRole" label="Send To" initialValue="all">
+            <Select>
+              <Option value="all">All</Option>
+              <Option value="students">Students Only</Option>
+              <Option value="teachers">Teachers Only</Option>
             </Select>
           </Form.Item>
-
-          <Form.Item
-            name="message"
-            label="Message"
-            rules={[{ required: true, message: 'Please enter notification message' }]}
-          >
-            <TextArea 
-              rows={4} 
-              placeholder="Enter your notification message here..." 
-              showCount 
-              maxLength={500}
-            />
+          <Form.Item name="expiryDate" label="Expiry Date" rules={[{ required: true }]}>
+            <DatePicker showTime className="w-full" />
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* Custom Table Styles */}
-      <style >{`
-        .custom-antd-table .ant-table-thead > tr > th {
-          background-color: #f8fafc !important;
-          color: #64748b !important;
-          font-weight: 600 !important;
-          border-bottom: 1px solid #e2e8f0 !important;
-        }
-        .custom-antd-table .ant-table-tbody > tr > td {
-          border-bottom: 1px solid #f1f5f9 !important;
-        }
-        .custom-antd-table .ant-table-pagination.ant-pagination {
-          margin: 16px 0 !important;
-        }
-        .line-clamp-1 {
-          display: -webkit-box;
-          -webkit-line-clamp: 1;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      `}</style>
+      {/* View Notification Modal */}
+      <Modal
+        title="Notification Details"
+        open={viewModalVisible}
+        onCancel={() => setViewModalVisible(false)}
+        footer={null}
+      >
+        {selectedNotification && (
+          <div className="space-y-2">
+            <p>
+              <strong>Title:</strong> {selectedNotification.title}
+            </p>
+            <p>
+              <strong>Message:</strong> {selectedNotification.message}
+            </p>
+            <p>
+              <strong>For:</strong> {selectedNotification.forRole}
+            </p>
+            <p>
+              <strong>Expires:</strong> {formatDate(selectedNotification.expiryDate)}
+            </p>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
 
-export default SendNotification;
+export default NotificationPage;

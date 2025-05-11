@@ -1,214 +1,171 @@
-import React, { useState } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Tag, Card, message } from 'antd';
-import { NotificationOutlined, UserOutlined, TeamOutlined, MailOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from "react";
+import { Button, Modal, Input, DatePicker, Table, message, Popconfirm, Form } from "antd";
+import moment from "moment";
+import { useParams } from "react-router-dom";
+import axiosInstance from './../../Axios/axiosInstance';
 
-const { Option } = Select;
 const { TextArea } = Input;
 
-const TeacherNotification = () => {
-  const [form] = Form.useForm();
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [notifications, setNotifications] = useState([
-    {
-      id: '1',
-      title: 'Exam Schedule',
-      message: 'Final exams will begin next Monday',
-      recipients: 'All Students',
-      date: '2023-05-15',
-    },
-    {
-      id: '2',
-      title: 'Staff Meeting',
-      message: 'Monthly staff meeting tomorrow at 10 AM',
-      recipients: 'All Teachers',
-      date: '2023-05-10',
-    },
-    {
-      id: '3',
-      title: 'Holiday Announcement',
-      message: 'School will be closed for Eid holidays',
-      recipients: 'All Teachers & Students',
-      date: '2023-05-05',
+const ClassNotificationPage = () => {
+  const [notifications, setNotifications] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [viewModal, setViewModal] = useState(false);
+  const [formData, setFormData] = useState({ title: "", message: "", expiryDate: "" });
+  const [selectedMessage, setSelectedMessage] = useState("");
+  const { classId } = useParams();
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await axiosInstance.get(`/getAllClassNotification`);
+      let getNoti = res.data.map((item,index)=>({
+        ...item
+      }))
+      console.log(res.data)
+      setNotifications(getNoti);
+    } catch (error) {
+      message.error("Error fetching notifications");
     }
-  ]);
-
-  const recipientOptions = [
-    { value: 'all', label: 'All Teachers & Students' },
-    { value: 'teachers', label: 'All Teachers' },
-    { value: 'students', label: 'All Students' },
-    { value: 'custom', label: 'Custom Selection' }
-  ];
-
-  const showModal = () => {
-    form.resetFields();
-    setIsModalVisible(true);
   };
 
-  const handleSubmit = () => {
-    form.validateFields().then(values => {
-      const newNotification = {
-        id: (notifications.length + 1).toString(),
-        title: values.title,
-        message: values.message,
-        recipients: recipientOptions.find(r => r.value === values.recipients)?.label || values.recipients,
-        date: new Date().toISOString().split('T')[0],
-      };
-      setNotifications([...notifications, newNotification]);
-      message.success('Notification sent successfully!');
-      setIsModalVisible(false);
-    });
+  useEffect(() => {
+    fetchNotifications();
+  }, [classId]);
+
+  const handleCreate = async () => {
+    const { title, message: msg, expiryDate } = formData;
+    if (!title || !msg || !expiryDate) {
+      return message.warning("Please fill all fields");
+    }
+
+    try {
+      await axiosInstance.post("/createClassNotification", {
+        ...formData,
+        classId,
+      });
+      message.success("Notification Created");
+      setOpen(false);
+      setFormData({ title: "", message: "", expiryDate: "" });
+      fetchNotifications();
+    } catch (error) {
+      message.error("Error creating notification");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axiosInstance.delete(`/classNotification/${id}`);
+      message.success("Notification deleted");
+      fetchNotifications();
+    } catch (error) {
+      message.error("Error deleting notification");
+    }
   };
 
   const columns = [
     {
-      title: 'Title',
-      dataIndex: 'title',
-      key: 'title',
-      render: (text) => <span className="font-medium">{text}</span>,
+      title: "Title",
+      dataIndex: "title",
+      key: "title",
+      className: "font-semibold",
     },
     {
-      title: 'Message',
-      dataIndex: 'message',
-      key: 'message',
-      render: (text) => <div className="text-gray-600 line-clamp-1">{text}</div>,
+      title: "Expiry",
+      dataIndex: "expiryDate",
+      key: "expiryDate",
+      render: (text) => moment(text).format("YYYY-MM-DD"),
     },
     {
-      title: 'Recipients',
-      dataIndex: 'recipients',
-      key: 'recipients',
-      render: (recipients) => {
-        let color = 'blue';
-        if (recipients.includes('Teachers')) color = 'purple';
-        if (recipients.includes('Students')) color = 'green';
-        if (recipients.includes('&')) color = 'orange';
-        
-        return (
-          <Tag color={color} className="capitalize">
-            {recipients.includes('All') ? recipients : `To: ${recipients}`}
-          </Tag>
-        );
-      },
-    },
-    {
-      title: 'Date',
-      dataIndex: 'date',
-      key: 'date',
-      render: (date) => <span className="text-gray-500">{date}</span>,
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <div className="flex gap-2">
+          <Button
+            type="link"
+            onClick={() => {
+              setSelectedMessage(record.message);
+              setViewModal(true);
+            }}
+          >
+            View
+          </Button>
+          <Popconfirm
+            title="Are you sure to delete?"
+            onConfirm={() => handleDelete(record._id)}
+          >
+            <Button danger type="link">
+              Delete
+            </Button>
+          </Popconfirm>
+        </div>
+      ),
     },
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col sm:flex-row gap-4  justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Notification Center</h1>
-          <p className="text-gray-500">Send and manage notifications to teachers and students</p>
-        </div>
-        <Button
-          type="primary"
-          icon={<NotificationOutlined />}
-          onClick={showModal}
-          className="bg-blue-600 hover:bg-blue-700"
-          size="large"
-        >
-          Send Notification
+    <div className="p-4 bg-white rounded shadow-md">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Class Notifications</h2>
+        <Button type="primary" onClick={() => setOpen(true)}>
+          + Add Notification
         </Button>
       </div>
 
-      <Card className="rounded-xl shadow-sm border-0 overflow-hidden">
-        <Table
-          columns={columns}
-          dataSource={notifications}
-          rowKey="id"
-          pagination={{ pageSize: 5 }}
-          className="custom-antd-table"
-        />
-      </Card>
+      <Table
+        dataSource={notifications}
+        columns={columns}
+        rowKey="_id"
+        pagination={{ pageSize: 5 }}
+      />
 
-      {/* Notification Modal */}
+      {/* Create Modal */}
+        <Modal
+          title="Create Notification"
+          open={open}
+          onCancel={() => setOpen(false)}
+          onOk={handleCreate}
+          okText="Create"
+        >
+          <Form layout="vertical">
+            <Form.Item label="Title" required>
+          <Input
+            placeholder="Enter Title"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          />
+            </Form.Item>
+            <Form.Item label="Message" required>
+          <TextArea
+            placeholder="Enter Message"
+            rows={4}
+            value={formData.message}
+            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+          />
+            </Form.Item>
+            <Form.Item label="Expiry Date & Time" required>
+          <DatePicker
+            className="w-full"
+            placeholder="Select Expiry Date & Time"
+            showTime
+            disabledDate={(current) => current && current < moment().startOf('day')}
+            onChange={(date) =>
+              setFormData({ ...formData, expiryDate: date?.toISOString() })
+            }
+          />
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {/* View Message Modal */}
       <Modal
-        title="Send New Notification"
-        visible={isModalVisible}
-        onOk={handleSubmit}
-        onCancel={() => setIsModalVisible(false)}
-        okText="Send Notification"
-        cancelText="Cancel"
-        width={700}
+        title="Notification Message"
+        open={viewModal}
+        onCancel={() => setViewModal(false)}
+        footer={null}
       >
-        <Form form={form} layout="vertical" className="mt-4">
-          <Form.Item
-            name="title"
-            label="Notification Title"
-            rules={[{ required: true, message: 'Please enter notification title' }]}
-          >
-            <Input 
-              prefix={<MailOutlined className="text-gray-400" />} 
-              placeholder="Enter notification title" 
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="recipients"
-            label="Recipients"
-            rules={[{ required: true, message: 'Please select recipients' }]}
-          >
-            <Select placeholder="Select recipients">
-              {recipientOptions.map(option => (
-                <Option key={option.value} value={option.value}>
-                  <div className="flex items-center">
-                    {option.value === 'teachers' && <UserOutlined className="mr-2 text-purple-500" />}
-                    {option.value === 'students' && <TeamOutlined className="mr-2 text-green-500" />}
-                    {option.value === 'all' && (
-                      <>
-                        <UserOutlined className="mr-1 text-purple-500" />
-                        <TeamOutlined className="mr-2 text-green-500" />
-                      </>
-                    )}
-                    {option.label}
-                  </div>
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="message"
-            label="Message"
-            rules={[{ required: true, message: 'Please enter notification message' }]}
-          >
-            <TextArea 
-              rows={4} 
-              placeholder="Enter your notification message here..." 
-              showCount 
-              maxLength={500}
-            />
-          </Form.Item>
-        </Form>
+        <p>{selectedMessage}</p>
       </Modal>
-
-      {/* Custom Table Styles */}
-      <style >{`
-        .custom-antd-table .ant-table-thead > tr > th {
-          background-color: #f8fafc !important;
-          color: #64748b !important;
-          font-weight: 600 !important;
-          border-bottom: 1px solid #e2e8f0 !important;
-        }
-        .custom-antd-table .ant-table-tbody > tr > td {
-          border-bottom: 1px solid #f1f5f9 !important;
-        }
-        .custom-antd-table .ant-table-pagination.ant-pagination {
-          margin: 16px 0 !important;
-        }
-        .line-clamp-1 {
-          display: -webkit-box;
-          -webkit-line-clamp: 1;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      `}</style>
     </div>
   );
 };
 
-export default TeacherNotification;
+export default ClassNotificationPage;

@@ -34,6 +34,8 @@ import StudentFee from "./Pages/StudentPages/StudentFee.jsx";
 import AdminProfile from "./Pages/AdminPages/AdminProfile.jsx";
 import PaymentHistoryPage from "./Pages/StudentPages/PaymentHistory.jsx";
 import CareersPage from "./Pages/AdminPages/ManageCareer.jsx";
+import StudentNotification from "./Pages/StudentPages/StudentNotification.jsx";
+import TeacherNoti from "./Pages/TeacherPages/TeacherNoti.jsx";
 
 // Lazy load components
 const Home = lazy(() => import("./Pages/HomePages/Home.jsx"));
@@ -78,10 +80,10 @@ function App() {
                   <Route path="manage-class/add-student/:courseId" element={<AddStudent />} />
                   <Route path="manage-package" element={<ManagePackage />} />
                   <Route path="notification" element={<SendNotification />} />
-                  <Route path ="profile" element={<AdminProfile/>}/>
-                  <Route path ="career" element={<CareersPage/>}/>
-                  
-                  
+                  <Route path="profile" element={<AdminProfile />} />
+                  <Route path="career" element={<CareersPage />} />
+
+
                 </Routes>
               </AdminLayout>
             }
@@ -98,7 +100,8 @@ function App() {
                   <Route path='class/send-notification/:classId' element={<TeacherNotification />} />
                   <Route path='class/enrolled-student/:classId' element={<EnrolledStudent />} />
                   <Route path="class/mark-attendence/:classId" element={<MarkAttendence />} />
-                  <Route path ="profile" element={<TeacherProfile/>}/>
+                  <Route path="profile" element={<TeacherProfile />} />
+                   <Route path="notification" element={<TeacherNoti/>} />
                 </Routes>
               </TeacherLayout>
             }
@@ -114,9 +117,9 @@ function App() {
                   <Route path="class" element={<StudentClass />} />
                   <Route path="class/resources/:classId" element={<StudentResourses />} />
                   <Route path="fee" element={<StudentFee />} />
-                  <Route path ="profile" element={<StudentProfile/>}/>
-                <Route path="paymentHistory" element={<PaymentHistoryPage/>}/>
-
+                  <Route path="profile" element={<StudentProfile />} />
+                  <Route path="paymentHistory" element={<PaymentHistoryPage />} />
+                  <Route path="notification" element={<StudentNotification />} />                  
                 </Routes>
               </StudentLayout>
             }
