@@ -23,6 +23,7 @@ const Chat = ({ id, path, sound }) => {
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const messageHandledRef = useRef(false);
+  const isPageActive = useRef(true); // Track if page is active
 
   const scrollToBottom = useCallback(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -65,8 +66,6 @@ const Chat = ({ id, path, sound }) => {
     ));
   }, [userId, users]);
 
-
-
   const fetchMessages = useCallback(async (receiverId) => {
     try {
       const { data } = await axiosInstance.get(`/messages/${userId}/${receiverId}`);
@@ -93,46 +92,52 @@ const Chat = ({ id, path, sound }) => {
     const senderUser = users.find(u => u._id === newMessage.sender);
     const senderName = senderUser ? `${senderUser.firstName}` : 'Unknown';
 
-    const isSender = newMessage.sender === userId;  // 👈 Add this line
+    const isSender = newMessage.sender === userId;
 
-    if (newMessage.sender === selectedUser) {
+    // Always play sound when receiving messages (not sent by self)
+    if (!isSender) {
+      console.log('sound')
+      sound(); // Play sound for all incoming messages
+      
+      // Show notification if the chat with this user is not currently open
+      if (newMessage.sender !== selectedUser) {
+        setUsers(prevUsers => {
+          const updatedUsers = prevUsers.map(u =>
+            u._id === newMessage.sender
+              ? { ...u, unreadMessages: (u.unreadMessages || 0) + 1 }
+              : u
+          );
+
+          const totalUnread = updatedUsers.reduce(
+            (sum, user) => sum + (user.unreadMessages || 0), 0
+          );
+
+          setUnreadCount(totalUnread);
+          return updatedUsers;
+        });
+
+        api.open({
+          message: `New message from ${senderName}`,
+          description: newMessage.content,
+          icon: <SmileOutlined style={{ color: '#108ee9' }} />,
+        });
+      }
+    }
+
+    // Add message to current chat if needed
+    if (newMessage.sender === selectedUser || newMessage.receiver === selectedUser) {
       setMessages(prev => {
         const exists = prev.find(msg => msg._id === newMessage._id);
         if (exists) return prev;
         return [...prev, newMessage];
       });
-
-      if (!isSender) sound(); // Only play sound if you are not sender
       scrollToBottom();
-    } else if (!isSender) { // 👈 Only show notification if you are receiver
-      setUsers(prevUsers => {
-        const updatedUsers = prevUsers.map(u =>
-          u._id === newMessage.sender
-            ? { ...u, unreadMessages: (u.unreadMessages || 0) + 1 }
-            : u
-        );
-
-        const totalUnread = updatedUsers.reduce(
-          (sum, user) => sum + (user.unreadMessages || 0), 0
-        );
-
-        setUnreadCount(totalUnread);
-        return updatedUsers;
-      });
-
-      api.open({
-        message: `New message from ${senderName}`,
-        description: newMessage.content,
-        icon: <SmileOutlined style={{ color: '#108ee9' }} />,
-      });
-      sound();
     }
 
     setTimeout(() => {
       messageHandledRef.current = false;
     }, 100);
   }, [selectedUser, users, userId, sound, api, scrollToBottom]);
-
 
   const handleDelete = (data) => {
     socket.emit("unsendLastMessage", {
@@ -142,6 +147,18 @@ const Chat = ({ id, path, sound }) => {
     });
   };
 
+  // Page visibility detection
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      isPageActive.current = document.visibilityState === 'visible';
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   useEffect(() => {
     socket.on("messageUnsent", ({ _id, content }) => {
@@ -156,10 +173,6 @@ const Chat = ({ id, path, sound }) => {
       socket.off("messageUnsent");
     };
   }, []);
-
-
-
-
 
   // Memoize user list to prevent unnecessary re-renders
   const userList = useMemo(() => (
@@ -254,17 +267,19 @@ const Chat = ({ id, path, sound }) => {
 
   useEffect(() => {
     socket.emit("register", userId);
+    
+    // Set up socket events in the main useEffect
     socket.on("receiveMessage", handleReceiveMessage);
-    // fetchUsers();
-
+    
     return () => {
-      socket.off("receiveMessage", handleReceiveMessage);
+      socket.off("receiveMessage");
     };
-  }, [userId, handleReceiveMessage, fetchUsers]);
+  }, [userId, handleReceiveMessage]);
 
   useEffect(() => {
     fetchUsers();
-  }, [])
+  }, [fetchUsers]);
+
   useEffect(() => {
     socket.on("messageRead", ({ senderId }) => {
       setUsers(prevUsers =>
@@ -310,18 +325,6 @@ const Chat = ({ id, path, sound }) => {
       inputRef.current?.focus();
     }
   };
-
-  // On receiveMessage — update with _id
-  useEffect(() => {
-    socket.on("receiveMessage", (messageFromDB) => {
-      setMessages(prev => [...prev, messageFromDB]); // contains _id
-    });
-
-    return () => {
-      socket.off("receiveMessage");
-    };
-  }, []);
-
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {

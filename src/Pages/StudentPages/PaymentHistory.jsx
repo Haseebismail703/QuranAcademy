@@ -16,7 +16,7 @@ const PaymentHistoryPage = ({ studentId }) => {
   useEffect(() => {
     const fetchPaymentHistory = async () => {
       try {
-        const response = await axiosInstance.get(`paymentHistory/6809e7a4ba4ffa4f777954b9`);
+        const response = await axiosInstance.get(`paymentHistory/681c8fdc6329587244535349`);
         setPaymentHistory(response.data.paymentHistory); // Set payment history to state
       } catch (error) {
         setError("Error fetching payment history");

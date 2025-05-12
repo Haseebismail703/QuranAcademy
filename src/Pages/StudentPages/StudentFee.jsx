@@ -13,7 +13,7 @@ export default function FeePaymentPage() {
     const fetchPaymentData = async () => {
       try {
         setLoading(true);
-        const response = await axiosInstance.get('/getPackageByStudentId/6809e7a4ba4ffa4f777954b9');
+        const response = await axiosInstance.get('/getPackageByStudentId/681c8fdc6329587244535349');
         setPaymentData(response.data || []);
         console.log("Payment Data:", response.data);
       } catch (err) {
@@ -132,11 +132,7 @@ export default function FeePaymentPage() {
 
                 <button
                   onClick={() => handlePayNow(payment._id)}
-                  className={`w-full text-white py-2 px-4 rounded-lg font-medium transition-colors ${payment.paymentStatus === 'completed'
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700'
-                    }`}
-                  disabled={payment.paymentStatus === 'completed'}
+                  className={`w-full text-white py-2 px-4 rounded-lg font-medium transition-colors bg-blue-600 hover:bg-blue-700 bg-blue-600 hover:bg-blue-700`}
                 >
                   {payment.paymentStatus === 'completed' ? 'Payment Completed' : 'Pay Now'}
                 </button>

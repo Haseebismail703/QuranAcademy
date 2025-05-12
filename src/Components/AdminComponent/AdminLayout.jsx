@@ -65,10 +65,15 @@ const menuItems = [
   {
     key: '7',
     icon: <UserOutlined />,
-    label: <Link to="/admin/career">Career</Link>, // Added Career menu item
+    label: <Link to="/admin/career">Career</Link>, 
   },
   {
     key: '8',
+    icon: <TeamOutlined />, // Replace with a recipe-related icon if available
+    label: <Link to="/admin/allrecipe">Manage Recipe</Link>, 
+  },
+  {
+    key: '9',
     icon: <LogoutOutlined style={{ color: 'red' }} />,
     label: 'Logout',
     danger: true,
