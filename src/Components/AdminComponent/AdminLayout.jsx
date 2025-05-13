@@ -70,7 +70,7 @@ const menuItems = [
   {
     key: '8',
     icon: <TeamOutlined />, // Replace with a recipe-related icon if available
-    label: <Link to="/admin/allrecipe">Manage Recipe</Link>, 
+    label: <Link to="/admin/allvoucher">Manage Voucher</Link>, 
   },
   {
     key: '9',

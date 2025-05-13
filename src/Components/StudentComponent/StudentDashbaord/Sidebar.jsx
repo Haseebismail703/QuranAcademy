@@ -9,7 +9,7 @@ export const Sidebar = ({
 }) => {
   const location = useLocation();
 
-  const isActive = (path) => location.pathname.startsWith(path);
+  const isActive = (path) => location.pathname === path;
 
   return (
     <div
@@ -67,11 +67,11 @@ export const Sidebar = ({
               isMobile={isMobile}
             />
           </Link>
-          <Link to="/student/paymentHistory" onClick={isMobile ? toggleSidebar : undefined}>
+          <Link to="/student/feevoucher" onClick={isMobile ? toggleSidebar : undefined}>
             <NavItem
               icon={<CreditCard className="h-5 w-5" />}
-              text="Payment History"
-              active={isActive("/student/paymentHistory")}
+              text="Fee Voucher"
+              active={isActive("/student/feevoucher")}
               isCollapsed={isCollapsed}
               isMobile={isMobile}
             />
