@@ -1,230 +1,181 @@
-import React from 'react';
-import { Card, Table, Avatar, Tag, Progress, Button, Space } from 'antd';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Card, Table, Skeleton, Row, Col, Avatar, Typography } from "antd";
 import {
-  UserOutlined,
-  BookOutlined,
+  UserAddOutlined,
   TeamOutlined,
-  CheckCircleOutlined,
-  EyeOutlined,
-  ArrowUpOutlined
-} from '@ant-design/icons';
+  BookOutlined,
+  SolutionOutlined,
+  DollarOutlined,
+} from "@ant-design/icons";
+import FeeChart from "../../Components/AdminComponent/FeeChart";
+
+const { Title } = Typography;
 
 const AdminDashboard = () => {
-  // Dummy data for cards
-  const stats = [
-    {
-      title: 'Total Students',
-      value: '1,248',
-      icon: <UserOutlined className="text-blue-500" />,
-      progress: 75,
-      trend: '12% increase',
-      color: 'bg-blue-100'
-    },
-    {
-      title: 'Active Courses',
-      value: '24',
-      icon: <BookOutlined className="text-green-500" />,
-      progress: 60,
-      trend: '8 new courses',
-      color: 'bg-green-100'
-    },
-    {
-      title: 'Teachers',
-      value: '36',
-      icon: <TeamOutlined className="text-purple-500" />,
-      progress: 45,
-      trend: '5 new teachers',
-      color: 'bg-purple-100'
-    },
-    {
-      title: 'Completion Rate',
-      value: '82%',
-      icon: <CheckCircleOutlined className="text-orange-500" />,
-      progress: 82,
-      trend: '3% improvement',
-      color: 'bg-orange-100'
-    }
-  ];
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [waitingStudent, setWaitingStudent] = useState([]);
 
-  // Dummy data for table
-  const students = [
-    {
-      key: '1',
-      name: 'Ahmed Khan',
-      email: 'ahmed.khan@example.com',
-      avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
-      status: 'active',
-      assignedTeacher: 'Mr. John Smith',
-      course: 'Hifz Program',
-      progress: 75
-    },
-    {
-      key: '2',
-      name: 'Fatima Ali',
-      email: 'fatima.ali@example.com',
-      avatar: 'https://randomuser.me/api/portraits/women/1.jpg',
-      status: 'active',
-      assignedTeacher: 'Ms. Emily Davis',
-      course: 'Nazra Course',
-      progress: 92
-    },
-    {
-      key: '3',
-      name: 'Mohammed Hassan',
-      email: 'mohammed.h@example.com',
-      avatar: 'https://randomuser.me/api/portraits/men/2.jpg',
-      status: 'inactive',
-      assignedTeacher: 'Dr. Robert Johnson',
-      course: 'Tajweed Advanced',
-      progress: 45
-    },
-    {
-      key: '4',
-      name: 'Aisha Rahman',
-      email: 'aisha.r@example.com',
-      avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
-      status: 'active',
-      assignedTeacher: 'Mr. John Smith',
-      course: 'Hifz Program',
-      progress: 68
-    },
-    {
-      key: '5',
-      name: 'Ibrahim Malik',
-      email: 'ibrahim.m@example.com',
-      avatar: 'https://randomuser.me/api/portraits/men/3.jpg',
-      status: 'active',
-      assignedTeacher: 'Ms. Sarah Wilson',
-      course: 'Islamic Studies',
-      progress: 81
+  const fetchDashboardData = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/getAdminDasData");
+      setData(res.data);
+      setWaitingStudent(
+        res.data?.waitingStudent.map((item, key) => ({
+          ...item,
+          key,
+        }))
+      );
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const cards = data && [
+    {
+      title: "Students",
+      newCount: `New student: ${data.newStudent}`,
+      totalCount: data.allStudent,
+      icon: <UserAddOutlined className="text-blue-500 text-2xl" />,
+      color: "bg-blue-100",
+    },
+    {
+      title: "Teachers",
+      newCount: `New teacher: ${data.newTeacher}`,
+      totalCount: data.allTeacher,
+      icon: <TeamOutlined className="text-green-500 text-2xl" />,
+      color: "bg-green-100",
+    },
+    {
+      title: "Classes",
+      newCount: `New class: ${data.newClass}`,
+      totalCount: data.allClass,
+      icon: <BookOutlined className="text-purple-500 text-2xl" />,
+      color: "bg-purple-100",
+    },
+    {
+      title: "Courses",
+      newCount: `New course: ${data.newCourse}`,
+      totalCount: data.allCourse,
+      icon: <SolutionOutlined className="text-orange-500 text-2xl" />,
+      color: "bg-orange-100",
+    },
+    {
+      title: "Packages",
+      newCount: `New package: ${data.newPackage}`,
+      totalCount: data.allPackage,
+      icon: <SolutionOutlined className="text-teal-500 text-2xl" />,
+      color: "bg-teal-100",
+    },
+    {
+      title: "This month paid fee",
+      newCount: `All Time: ${data.allTimePaidFeeAmount} Rs`,
+      totalCount: `${data.thisMonthPaidFeeAmount} Rs`,
+      icon: <DollarOutlined className="text-red-500 text-2xl" />,
+      color: "bg-red-100",
+    },
   ];
 
   const columns = [
     {
-      title: 'Student',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text, record) => (
-        <div className="flex items-center">
-          <Avatar src={record.avatar} icon={<UserOutlined />} className="mr-3" />
-          <div>
-            <p className="font-medium text-gray-800 m-0">{text}</p>
-            <p className="text-gray-500 text-sm m-0">{record.email}</p>
-          </div>
-        </div>
-      ),
+      title: "No",
+      dataIndex: "key",
+      render: (key) => <p>{key + 1}</p>,
     },
     {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
+      title: "Profile",
+      dataIndex: "profileUrl",
+      render: (url) => <Avatar src={url} size={48} />,
+    },
+    {
+      title: "First Name",
+      dataIndex: "firstName",
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+    },
+    {
+      title: "Gender",
+      dataIndex: "gender",
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
       render: (status) => (
-        <Tag color={status === 'active' ? 'green' : 'red'} className="capitalize">
+        <span className="capitalize text-white bg-green-500 px-2 py-1 rounded-md text-xs">
           {status}
-        </Tag>
+        </span>
       ),
     },
     {
-      title: 'Assigned Teacher',
-      dataIndex: 'assignedTeacher',
-      key: 'assignedTeacher',
-      render: (teacher) => <span className="text-gray-700">{teacher}</span>,
-    },
-    {
-      title: 'Course',
-      dataIndex: 'course',
-      key: 'course',
-      render: (course) => <span className="text-gray-700 font-medium">{course}</span>,
-    },
-    {
-      title: 'Progress',
-      dataIndex: 'progress',
-      key: 'progress',
-      render: (progress) => (
-        <div className="flex items-center">
-          <Progress 
-            percent={progress} 
-            showInfo={false} 
-            strokeColor={progress > 70 ? '#10B981' : progress > 40 ? '#3B82F6' : '#EF4444'}
-            className="mr-2 w-24"
-          />
-          <span className="text-sm font-medium">{progress}%</span>
-        </div>
-      ),
-    },
-    {
-      title: 'Action',
-      key: 'action',
-      render: () => (
-        <Button 
-          type="text" 
-          icon={<EyeOutlined />} 
-          className="text-blue-500 hover:text-blue-700"
-        >
-          View
-        </Button>
-      ),
+      title: "Course Name",
+      dataIndex: ["course", "courseName"],
     },
   ];
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Admin Dashboard</h1>
-      
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => (
-          <Card key={index} className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start">
-              <div className={`p-3 rounded-full ${stat.color}`}>
-                {React.cloneElement(stat.icon, { className: 'text-xl' })}
-              </div>
-              <div className="text-right">
-                <span className="text-xs text-gray-500">{stat.trend}</span>
-              </div>
-            </div>
-            <h3 className="text-lg font-medium text-gray-500 mt-4">{stat.title}</h3>
-            <p className="text-2xl font-bold text-gray-800 mt-1 mb-3">{stat.value}</p>
-            <Progress 
-              percent={stat.progress} 
-              showInfo={false} 
-              strokeColor={stat.progress > 70 ? '#10B981' : stat.progress > 40 ? '#3B82F6' : '#EF4444'}
-            />
-          </Card>
-        ))}
-      </div>
+    <div className="p-4">
+      <Title level={3} className="mb-6 text-center">
+        Admin Dashboard
+      </Title>
 
-      {/* Students Table */}
-      <Card 
-        title={<span className="text-lg font-semibold">Student Overview</span>}
-        className="rounded-xl shadow-sm"
-      >
-        <Table
-          columns={columns}
-          dataSource={students}
-          pagination={{ pageSize: 5 }}
-          rowClassName="hover:bg-gray-50"
-          className="custom-antd-table"
-          scroll={{"x" : "100%"}}
-        />
+      {/* Summary Cards */}
+      <Row gutter={[16, 16]} className="mb-8">
+        {loading
+          ? Array.from({ length: 6 }).map((_, idx) => (
+              <Col xs={24} sm={12} md={8} key={idx}>
+                <Skeleton active paragraph={{ rows: 2 }} />
+              </Col>
+            ))
+          : cards.map((card, idx) => (
+              <Col xs={24} sm={12} md={8} key={idx}>
+                <div className="relative rounded-2xl shadow-md bg-white hover:shadow-lg transition-all overflow-hidden">
+                  <div
+                    className={`absolute left-0 top-0 h-full w-2 ${card.color}`}
+                  ></div>
+                  <div className="p-4 pl-6">
+                    <div className="flex items-start justify-between">
+                      {card.icon}
+                      <p className="text-xs text-gray-400 text-right">
+                        {card.newCount}
+                      </p>
+                    </div>
+                    <div className="mt-2">
+                      <p className="text-gray-600">{card.title}</p>
+                      <p className="text-2xl font-bold text-black">
+                        {card.totalCount}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Col>
+            ))}
+      </Row>
+
+      {/* Fee Chart */}
+      {loading ? <Skeleton active paragraph={{ rows: 6 }} /> : <FeeChart />}
+<br />
+      {/* Waiting Students Table */}
+      <Card title="Waiting Students" className="rounded-2xl shadow-md mt-6">
+        {loading ? (
+          <Skeleton active paragraph={{ rows: 6 }} />
+        ) : (
+          <Table
+            dataSource={waitingStudent}
+            columns={columns}
+            pagination={{ pageSize: 5 }}
+            scroll={{ x: true }}
+          />
+        )}
       </Card>
-
-      {/* Custom Table Styles */}
-      <style>{`
-        .custom-antd-table .ant-table-thead > tr > th {
-          background-color: #f8fafc !important;
-          color: #64748b !important;
-          font-weight: 600 !important;
-          border-bottom: 1px solid #e2e8f0 !important;
-        }
-        .custom-antd-table .ant-table-tbody > tr > td {
-          border-bottom: 1px solid #f1f5f9 !important;
-        }
-        .custom-antd-table .ant-table-pagination.ant-pagination {
-          margin: 16px 0 !important;
-        }
-      `}</style>
     </div>
   );
 };
