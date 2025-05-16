@@ -40,7 +40,8 @@ const StudentDashboard = ({ chartData }) => {
 
   const feeData = [
     { name: 'Total Paid', amount: data.totalPaidFee },
-    { name: 'Last Payment', amount: data.lastPaidFee },
+    { name: 'Pending Fee', amount: data.pendingFee },
+    { name: 'Last Fee', amount: data.lastPaidFee },
     { name: 'Rejected', amount: data.rejectedFee }
   ];
 
