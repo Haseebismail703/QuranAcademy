@@ -1,10 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { Bell } from "lucide-react";
+import socket from "../../utils/socket.js";
 
 const StudentNotify = () => {
   const [open, setOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   const ref = useRef();
 
+  const userId = "681c8fdc6329587244535349"; // ideally get this from auth context
+
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (ref.current && !ref.current.contains(event.target)) {
@@ -15,6 +20,25 @@ const StudentNotify = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Register user and receive notifications
+  useEffect(() => {
+    // socket.emit("register", userId);
+
+    socket.on("receiveNotification", (notify) => {
+      if(notify.receiverId === userId) {
+         console.log(notify)
+      }
+     
+      // setNotifications((prev) => [notify, ...prev]);
+    });
+
+    return () => {
+      socket.off("receiveNotification");
+    };
+  }, [userId]);
+
+  const unreadCount = notifications.length;
+
   return (
     <div className="relative" ref={ref}>
       <button
@@ -22,9 +46,11 @@ const StudentNotify = () => {
         className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full relative"
       >
         <Bell className="h-5 w-5" />
-        <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 text-white text-xs flex items-center justify-center rounded-full">
-          1
-        </span>
+        {unreadCount > 0 && (
+          <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 text-white text-xs flex items-center justify-center rounded-full">
+            {unreadCount}
+          </span>
+        )}
       </button>
 
       {open && (
@@ -33,15 +59,15 @@ const StudentNotify = () => {
             Notifications
           </div>
           <ul className="max-h-60 overflow-y-auto">
-            <li className="px-4 py-2 hover:bg-gray-50 cursor-pointer">
-              📢 New message from admin
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-50 cursor-pointer">
-              ✅ Your application was approved
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-50 cursor-pointer">
-              🔔 Upcoming appointment tomorrow
-            </li>
+            {notifications.length === 0 ? (
+              <li className="px-4 py-2 text-gray-400">No new notifications</li>
+            ) : (
+              notifications.map((n) => (
+                <li key={n._id} className="px-4 py-2 hover:bg-gray-50 cursor-pointer">
+                  🔔 {n.message}
+                </li>
+              ))
+            )}
           </ul>
           <div className="p-2 text-center text-blue-600 text-sm hover:underline cursor-pointer">
             View all

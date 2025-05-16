@@ -1,12 +1,10 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Avatar, message as AntMessage, Badge, notification } from "antd";
 import { MessageOutlined, CloseOutlined, ArrowLeftOutlined, SendOutlined, SmileOutlined } from "@ant-design/icons";
-import io from "socket.io-client";
+import socket from "../../utils/socket.js";
 import useSound from 'use-sound';
 import axiosInstance from '../../Axios/axiosInstance.js';
 import sendMessageTone from '../../assets/sendMessage.wav';
-
-const socket = io("http://localhost:5000");
 
 const Chat = ({ id, path, sound }) => {
   const userId = id;

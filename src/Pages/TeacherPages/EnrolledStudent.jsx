@@ -64,6 +64,7 @@ const EnrolledStudent = () => {
             setLinkLoading(true);
             await axiosInstance.put(`/addClassLink/${selectedStudent._id}`, {
                 classLink: classLink.trim(),
+                teacherId : '681c8fec632958724453534e'
             });
             message.success('Class link added successfully!');
             setLinkModalVisible(false);
@@ -83,7 +84,7 @@ const EnrolledStudent = () => {
             setLinkLoading(true);
             await axiosInstance.put(`/addClassLink/${selectedStudent._id}`, {
                 classLink: '',
-                classId
+                 teacherId : '681c8fec632958724453534e'
             });
             message.success('Class link removed successfully!');
             setLinkModalVisible(false);
