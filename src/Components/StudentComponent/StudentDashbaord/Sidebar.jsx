@@ -14,10 +14,9 @@ export const Sidebar = ({
   return (
     <div
       className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 z-30 transition-transform duration-300 flex flex-col
-        ${
-          isMobile
-            ? `${sidebarOpen ? "translate-x-0" : "-translate-x-full"} w-72`
-            : isCollapsed
+        ${isMobile
+          ? `${sidebarOpen ? "translate-x-0" : "-translate-x-full"} w-72`
+          : isCollapsed
             ? "w-16"
             : "w-64"
         }`}
@@ -99,7 +98,7 @@ export const Sidebar = ({
 
       <div className="py-3 border-t border-gray-200">
         <div
-          onClick={() => console.log("Sign out")} 
+          onClick={() => console.log("Sign out")}
           className="flex items-center px-4 py-2 transition-colors cursor-pointer text-gray-700 hover:bg-gray-100 rounded"
         >
           <div className="mr-3">
@@ -122,11 +121,10 @@ export const Sidebar = ({
 
 const NavItem = ({ icon, text, active, isCollapsed, isMobile }) => (
   <div
-    className={`flex items-center px-4 py-2 transition-colors cursor-pointer ${
-      active
+    className={`flex items-center px-4 py-2 transition-colors cursor-pointer ${active
         ? "bg-blue-100 text-blue-600 font-semibold"
         : "text-gray-700 hover:bg-gray-100"
-    }`}
+      }`}
   >
     <div className="mr-3">{icon}</div>
     {(!isCollapsed || isMobile) && <span className="text-sm">{text}</span>}
