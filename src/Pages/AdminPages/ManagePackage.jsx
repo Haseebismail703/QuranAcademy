@@ -102,6 +102,7 @@ console.log(students)
             classType: values.classType,
             sessionDuration: values.sessionDuration,
             duration: values.duration,
+            adminId : '681c8fc56329587244535343'
           };
 
           const response = await axiosInstance.post('/createPackage', newPackage);

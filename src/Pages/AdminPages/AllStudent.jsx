@@ -84,6 +84,7 @@ const AllStudentsPage = () => {
             await axiosInsteance.post(`/removeStudentFromClass`, {
                 classId: classId,
                 studentId: studentToDelete._id,
+                 adminId : '681c8fc56329587244535343'
             });
             message.success(`Student ${studentToDelete.firstName} removed successfully`);
             fetchStudents();

@@ -68,6 +68,7 @@ const PackageTablePage = () => {
         courseId: data.courseId?._id,
         status: newStatus,
         voucherId: data?._id,
+        adminId : '681c8fc56329587244535343'
       });
 
       setAllData((prevData) =>
