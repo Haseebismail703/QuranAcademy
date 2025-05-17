@@ -90,7 +90,7 @@ const FeeDashboard = () => {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-gray-500 text-sm">Pending Fee</p>
-                <p className="text-2xl font-bold text-gray-800">{data?.pendingFee || 0}</p>
+                <p className="text-2xl font-bold text-gray-800">Rs {data?.pendingFee || 0}</p>
                 <p className="text-xs text-gray-400 mt-1">Awaiting approval</p>
               </div>
               <div className="text-orange-500 text-2xl">
@@ -106,7 +106,7 @@ const FeeDashboard = () => {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-gray-500 text-sm">Rejected Fee</p>
-                <p className="text-2xl font-bold text-gray-800">{data?.rejectedFee || 0}</p>
+                <p className="text-2xl font-bold text-gray-800">Rs {data?.rejectedFee || 0}</p>
                 <p className="text-xs text-gray-400 mt-1">Not approved</p>
               </div>
               <div className="text-red-500 text-2xl">
