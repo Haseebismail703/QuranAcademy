@@ -1,37 +1,46 @@
-import React from 'react';
-import { Avatar, Badge, Dropdown, Space, Typography } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Avatar, Badge, Dropdown, Space, Typography,message } from 'antd';
 import { BellTwoTone, CloseOutlined } from '@ant-design/icons';
+import axios from 'axios';
+import moment from 'moment';
+import socket from '../../utils/socket.js';
 
 const { Text } = Typography;
 
-const notificationData = [
-  {
-    id: 1,
-    name: 'Ali Khan',
-    message: 'New teacher request received.',
-    time: '2 mins ago',
-    type: 'NEW',
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-  },
-  {
-    id: 2,
-    name: 'React Course',
-    message: 'React Advanced has been added.',
-    time: '10 mins ago',
-    type: 'NEW',
-    avatar: 'https://img.icons8.com/color/48/000000/react-native.png',
-  },
-  {
-    id: 3,
-    name: 'System',
-    message: 'System update scheduled at 10PM.',
-    time: '1 hour ago',
-    type: 'EARLIER',
-    avatar: 'https://cdn-icons-png.flaticon.com/512/1828/1828665.png',
-  },
-];
-
 const AdminNotify = () => {
+  const [notifications, setNotifications] = useState([]);
+
+   let adminId = '681c8fc56329587244535343'
+  useEffect(() => {
+    // Fetch notifications via Axios
+    const fetchNotifications = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/getNotify/681c8fc56329587244535343'); // replace with actual API
+        console.log(res.data)
+        setNotifications(res.data);
+      } catch (err) {
+        console.error('Error fetching notifications:', err);
+      }
+    };
+
+    fetchNotifications();
+  }, [adminId]);
+
+
+  useEffect(() => {
+    const handleReceiveNotification = (notify) => {
+      if (notify.receiverId.includes(adminId)) {
+        message.success("New notification received");
+        setNotifications(prev => [notify, ...prev]);
+        // setUnreadCount((prev) => prev + 1); // ✅ increment unread
+      }
+    };
+
+    socket.on("receiveNotification", handleReceiveNotification);
+
+    return () => socket.off("receiveNotification", handleReceiveNotification);
+  }, []);
+
   const content = (
     <div style={{ width: 350, background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
       <div style={{
@@ -49,47 +58,31 @@ const AdminNotify = () => {
       </div>
 
       <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-        <div style={{ padding: '8px 16px', backgroundColor: '#f5f5f5' }}>
-          <Text strong>NEW</Text>
-        </div>
-        {notificationData.filter(n => n.type === 'NEW').map(notification => (
-          <div key={notification.id} style={{
-            padding: '12px 16px',
-            borderBottom: '1px solid #f0f0f0',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '12px'
-          }}>
-            <Avatar size="large" src={notification.avatar} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 500 }}>{notification.name}</div>
-              <div style={{ color: '#888', fontSize: 12 }}>{notification.message}</div>
-              <div style={{ color: '#aaa', fontSize: 11, marginTop: 4 }}>{notification.time}</div>
+        {notifications.length === 0 ? (
+          <div style={{ padding: '16px', textAlign: 'center', color: '#aaa' }}>No notifications</div>
+        ) : (
+          notifications.map(notif => (
+            <div key={notif._id} style={{
+              padding: '12px 16px',
+              borderBottom: '1px solid #f0f0f0',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px'
+            }}>
+              <Avatar size="large" src={notif.senderId?.profileUrl || 'https://cdn-icons-png.flaticon.com/512/1828/1828665.png'} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 500 }}>
+                  {notif.senderId?.role === 'teacher' ? 'Teacher' : 'System'}
+                </div>
+                <div style={{ color: '#888', fontSize: 12 }}>{notif.message}</div>
+                <div style={{ color: '#aaa', fontSize: 11, marginTop: 4 }}>
+                  {moment(notif.created_at).fromNow()}
+                </div>
+              </div>
+              <CloseOutlined style={{ fontSize: 12, color: '#888', cursor: 'pointer' }} />
             </div>
-            <CloseOutlined style={{ fontSize: 12, color: '#888', cursor: 'pointer' }} />
-          </div>
-        ))}
-
-        <div style={{ padding: '8px 16px', backgroundColor: '#f5f5f5' }}>
-          <Text strong>EARLIER</Text>
-        </div>
-        {notificationData.filter(n => n.type === 'EARLIER').map(notification => (
-          <div key={notification.id} style={{
-            padding: '12px 16px',
-            borderBottom: '1px solid #f0f0f0',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '12px'
-          }}>
-            <Avatar size="large" src={notification.avatar} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 500 }}>{notification.name}</div>
-              <div style={{ color: '#888', fontSize: 12 }}>{notification.message}</div>
-              <div style={{ color: '#aaa', fontSize: 11, marginTop: 4 }}>{notification.time}</div>
-            </div>
-            <CloseOutlined style={{ fontSize: 12, color: '#888', cursor: 'pointer' }} />
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       <div style={{
@@ -105,7 +98,7 @@ const AdminNotify = () => {
 
   return (
     <Dropdown dropdownRender={() => content} trigger={['click']} placement="bottomRight" arrow>
-      <Badge count={notificationData.length} size="small">
+      <Badge count={notifications.length} size="small">
         <BellTwoTone twoToneColor="#1890ff" style={{ fontSize: 22, cursor: 'pointer' }} />
       </Badge>
     </Dropdown>

@@ -13,7 +13,7 @@ import TeacherLayout from "./Components/TeacherComponent/TeacherLayout.jsx";
 import TeacherDashboard from './Pages/TeacherPages/TaecherDashboard.jsx'
 import Class from "./Pages/TeacherPages/Class.jsx";
 import AddResources from "./Pages/TeacherPages/AddResourses.jsx";
-import TeacherNotification from "./Pages/TeacherPages/TeacherNotification.jsx";
+import ClassNotification from "./Pages/TeacherPages/ClassNotification.jsx";
 import EnrolledStudent from "./Pages/TeacherPages/EnrolledStudent.jsx";
 import MarkAttendence from "./Pages/TeacherPages/MarkAttendence.jsx";
 import BasicQuranReading from "./Pages/HomePages/BasicQuranReading.jsx";
@@ -99,7 +99,7 @@ function App() {
                   <Route path="dashboard" element={<TeacherDashboard />} />
                   <Route path="class" element={<Class />} />
                   <Route path='class/add-resourse/:classId' element={<AddResources />} />
-                  <Route path='class/send-notification/:classId' element={<TeacherNotification />} />
+                  <Route path='class/send-notification/:classId' element={<ClassNotification />} />
                   <Route path='class/enrolled-student/:classId' element={<EnrolledStudent />} />
                   <Route path="class/mark-attendence/:classId" element={<MarkAttendence />} />
                   <Route path="profile" element={<TeacherProfile />} />
