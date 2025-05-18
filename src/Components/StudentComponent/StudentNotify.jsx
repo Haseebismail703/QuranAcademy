@@ -134,9 +134,7 @@ const StudentNotify = () => {
                   }
                   onClick={() =>
                     navigate(
-                      n.message === "Class link added join the class"
-                        ? "/student/class"
-                        : "/student/notification"
+                     n.path
                     )
                   }
                 >
