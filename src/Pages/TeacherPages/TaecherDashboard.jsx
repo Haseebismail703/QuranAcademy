@@ -5,12 +5,16 @@ import {
     Statistic,
     Avatar,
     Skeleton,
-    message
+    message,
+    Row,
+    Col,
+    Tag
 } from 'antd';
 import {
     UserOutlined,
     TeamOutlined,
-    BookOutlined
+    BookOutlined,
+    ScheduleOutlined
 } from '@ant-design/icons';
 import axiosInstance from '../../Axios/axiosInstance';
 
@@ -23,7 +27,6 @@ const TeacherDashboard = () => {
             try {
                 const { data } = await axiosInstance.get(`/teacher-dashboard/681c8fec632958724453534e`);
                 setDashboardData(data);
-                // console.log()
             } catch (err) {
                 message.error("Failed to fetch dashboard data");
             } finally {
@@ -53,73 +56,141 @@ const TeacherDashboard = () => {
         {
             title: 'Timing',
             dataIndex: 'timing',
-            key: 'timing'
+            key: 'timing',
+            render: (timing) => (
+                <Tag color='#b7eb8f' style={{ color: '#222' }}>
+                    {timing}
+                </Tag>
+            )
         }
     ];
 
-    const { totalStudents, totalClasses, nextStudent, students } = dashboardData || {};
+    const { totalStudents, totalClasses, nextStudent, students, averageAttendance } = dashboardData || {};
+
+    // Card border colors and equal height
+    const cardStyles = [
+        { borderLeft: '4px solid #a7d8ff', hover: '#e6f7ff', iconColor: '#1890ff' }, // Light blue
+        { borderLeft: '4px solid #b7eb8f', hover: '#f6ffed', iconColor: '#52c41a' }, // Light green
+        { borderLeft: '4px solid #ffd591', hover: '#fff7e6', iconColor: '#fa8c16' }, // Light orange
+        { borderLeft: '4px solid #d3adf7', hover: '#f9f0ff', iconColor: '#722ed1' }  // Light purple
+    ];
 
     return (
-        <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="text-center">
-                    {loading ? (
-                        <Skeleton active />
-                    ) : (
-                        <div className="flex flex-col items-center justify-center space-y-2">
-                            <TeamOutlined className="text-green-700 text-2xl" />
-                            <div>
-                                <div className="text-sm text-gray-500">Total Students</div>
-                                <div className="text-xl font-semibold text-green-700">{totalStudents}</div>
-                            </div>
-                        </div>
-                    )}
-                </Card>
+        <div style={{ padding: '24px' }}>
+            {/* Stats Cards Row */}
+            <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+                {[
+                    {
+                        title: 'Average Attendance',
+                        value: averageAttendance,
+                        icon: <TeamOutlined />,
+                        index: 0,
+                    },
+                    {
+                        title: 'Total Students',
+                        value: totalStudents,
+                        icon: <TeamOutlined />,
+                        index: 1
+                    },
+                    {
+                        title: 'Total Classes',
+                        value: totalClasses,
+                        icon: <BookOutlined />,
+                        index: 2
+                    },
+                    {
+                        title: 'Next Student',
+                        value: nextStudent?.fullName || 'N/A',
+                        icon: <ScheduleOutlined />,
+                        index: 3,
+                        subText: nextStudent?.timing || 'N/A',
+                        isNextStudent: true
+                    }
+                ].map((item) => (
+                    <Col xs={24} sm={12} md={12} lg={6} key={item.title}>
+                        <Card 
+                            hoverable
+                            style={{ 
+                                ...cardStyles[item.index],
+                                height: '100%',
+                                display: 'flex',
+                                flexDirection: 'column'
+                            }}
+                           
+                        >
+                            {loading ? (
+                                <Skeleton active paragraph={{ rows: 0 }} />
+                            ) : (
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    <div style={{
+                                        background: cardStyles[item.index].hover,
+                                        borderRadius: '50%',
+                                        padding: '12px',
+                                        marginRight: '16px',
+                                        position: 'relative'
+                                    }}>
+                                        {item.isNextStudent && (
+                                            <span className="pulse-dot" style={{
+                                                position: 'absolute',
+                                                top: '-3px',
+                                                right: '-3px',
+                                                width: '10px',
+                                                height: '10px',
+                                                borderRadius: '50%',
+                                                background: '#ff4d4f',
+                                                border: '2px solid white'
+                                            }}></span>
+                                        )}
+                                        {React.cloneElement(item.icon, { 
+                                            style: { 
+                                                fontSize: '24px', 
+                                                color: cardStyles[item.index].iconColor 
+                                            } 
+                                        })}
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ color: '#8c8c8c', fontSize: '14px' }}>
+                                            {item.title}
+                                        </div>
+                                        <div style={{ 
+                                            fontSize: item.isNextStudent ? '18px' : '24px', 
+                                            fontWeight: 600, 
+                                            color: cardStyles[item.index].iconColor,
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis'
+                                        }}>
+                                            {item.value}{item.suffix || ''}
+                                        </div>
+                                        {item.subText && (
+                                            <div style={{ 
+                                                color: '#8c8c8c', 
+                                                fontSize: '12px',
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis'
+                                            }}>
+                                                {item.subText}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </Card>
+                    </Col>
+                ))}
+            </Row>
 
-                <Card className="text-center">
-                    {loading ? (
-                        <Skeleton active />
-                    ) : (
-                        <div className="flex flex-col items-center justify-center space-y-2">
-                            <BookOutlined className="text-green-700 text-2xl" />
-                            <div>
-                                <div className="text-sm text-gray-500">Total Class</div>
-                                <div className="text-xl font-semibold text-green-700">{totalClasses}</div>
-                            </div>
-                        </div>
-                    )}
-                </Card>
-
-
-                <Card>
-                    {loading ? (
-                        <Skeleton active />
-                    ) : (
-                        <>
-                            <div className="flex items-center justify-center space-x-2">
-                                <span className="h-2 w-2 rounded-full bg-yellow-500 animate-ping"></span>
-                                <Statistic
-                                    title="Next Student"
-                                    value={nextStudent?.fullName || 'N/A'}
-                                    prefix={<UserOutlined />}
-                                    valueStyle={{ color: '#faad14' }}
-                                />
-                            </div>
-                            <div className="mt-2 text-gray-500 text-sm text-center">
-                                Timing: {nextStudent?.timing || 'N/A'}
-                            </div>
-                        </>
-                    )}
-                </Card>
-
-            </div>
-
-            <Card title="Student Classes Schedule">
+            {/* Student Schedule Table */}
+            <Card 
+                title="Student Classes Schedule" 
+            >
                 <Table
                     columns={columns}
                     dataSource={loading ? [] : students?.map((s, i) => ({ ...s, key: i }))}
                     loading={loading}
-                    scroll={{ x: '100%' }}
+                    scroll={{ x: 'max-content' }}
+                    pagination={{ pageSize: 5 }}
                 />
             </Card>
         </div>

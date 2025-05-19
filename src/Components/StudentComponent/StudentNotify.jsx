@@ -4,11 +4,14 @@ import axios from "axios";
 import socket from "../../utils/socket.js";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
+import useSound from 'use-sound';
+import notifyTone from '../../assets/notify.wav'
+import moment from "moment";
 const StudentNotify = () => {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-
+  const [playNotifyTone] = useSound(notifyTone)
   const ref = useRef();
 
   const userId = "681c8fdc6329587244535349";
@@ -31,7 +34,8 @@ const StudentNotify = () => {
   // Mark all notifications as read (PUT API call)
   const markAllAsRead = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/read-all/${userId}`);
+      let res = await axios.put(`http://localhost:5000/api/read-all/${userId}`);
+      console.log(res)
       setNotifications((prev) =>
         prev.map((n) => ({ ...n, readBy: true }))
       );
@@ -48,21 +52,26 @@ const StudentNotify = () => {
   useEffect(() => {
     fetchNotifications();
   }, []);
-  // console.log(notifications)
-  // Listen for real-time notifications via socket
   useEffect(() => {
     const handleReceiveNotification = (notify) => {
-      if (notify.receiverId.includes(userId)) {
+      // console.log(notify);
+
+      const isForThisStudent = notify.receiverId?.includes(userId); // direct to student
+      const isForStudents = Array.isArray(notify.receiverType) && notify.receiverType.includes("students");
+      const isForStudentAndTeacher = Array.isArray(notify.receiverType) && notify.receiverType.length === 1 && notify.receiverType[0] === "teachers";
+
+      if (isForThisStudent || (isForStudents && !isForStudentAndTeacher)) {
+        playNotifyTone();
         message.success("New notification received");
-        setNotifications((prev) => [notify, ...prev]);
-        setUnreadCount((prev) => prev + 1); // ✅ increment unread
+        setNotifications(prev => [notify, ...prev]);
+        setUnreadCount(prev => prev + 1);
       }
     };
 
     socket.on("receiveNotification", handleReceiveNotification);
-
     return () => socket.off("receiveNotification", handleReceiveNotification);
   }, []);
+
 
 
   // Outside click close
@@ -110,12 +119,13 @@ const StudentNotify = () => {
                 {notifications.length} total, {unreadCount} unread
               </p>
             </div>
+            {unreadCount > 0 &&
             <button
               onClick={markAllAsRead}
               className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
             >
               <Check className="h-3 w-3 mr-1" /> Mark all read
-            </button>
+            </button> }
           </div>
 
           <div className="max-h-96 overflow-y-auto">
@@ -132,10 +142,13 @@ const StudentNotify = () => {
                   key={n._id}
                   className={`px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0 ${!n.readBy ? "bg-blue-50" : ""}`
                   }
-                  onClick={() =>
-                    navigate(
-                     n.path
-                    )
+                  onClick={() => {
+                    if (n.path === '/notification') {
+                      navigate('/student/notification')
+                    } else {
+                      navigate(n.path)
+                    }
+                  }
                   }
                 >
                   <div className="flex items-start">
@@ -169,7 +182,8 @@ const StudentNotify = () => {
 
                         </h4>
                         <span className="text-xs text-gray-500">
-                          {formatTime(n.created_at)} • {formatDate(n.created_at)}
+                          {formatTime(n.created_at)} • {formatDate(n.created_at)} <br />
+                           {moment(n.created_at).fromNow()}
                         </span>
                       </div>
 

@@ -1,37 +1,75 @@
-import React from 'react';
-import { Avatar, Badge, Dropdown, Space, Typography } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Avatar, Badge, Dropdown, Space, Typography, message, Grid } from 'antd';
 import { BellTwoTone, CloseOutlined } from '@ant-design/icons';
-
+import axios from 'axios';
+import moment from 'moment';
+import { useNavigate } from 'react-router-dom';
+import socket from '../../utils/socket.js';
+import useSound from 'use-sound';
+import notifyTone from '../../assets/notify.wav'
 const { Text } = Typography;
 
-const notificationData = [
-  {
-    id: 1,
-    name: 'Ali Khan',
-    message: 'New teacher request received.',
-    time: '2 mins ago',
-    type: 'NEW',
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-  },
-  {
-    id: 2,
-    name: 'React Course',
-    message: 'React Advanced has been added.',
-    time: '10 mins ago',
-    type: 'NEW',
-    avatar: 'https://img.icons8.com/color/48/000000/react-native.png',
-  },
-  {
-    id: 3,
-    name: 'System',
-    message: 'System update scheduled at 10PM.',
-    time: '1 hour ago',
-    type: 'EARLIER',
-    avatar: 'https://cdn-icons-png.flaticon.com/512/1828/1828665.png',
-  },
-];
-
 const TeacherNotify = () => {
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [playNotifyTone] = useSound(notifyTone)
+  const teacherId = '681c8fec632958724453534e';
+  let navigate = useNavigate()
+  const { useBreakpoint } = Grid;
+  const screens = useBreakpoint();
+  const placement = screens.xs ? 'bottom' : 'bottomRight';
+  const fetchNotifications = async () => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/getNotify/${teacherId}`);
+      const unread = res.data.filter(n => !n.readBy).length;
+      // console.log(res.data)
+      setNotifications(res.data);
+      setUnreadCount(unread);
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [teacherId]);
+
+  useEffect(() => {
+    const handleReceiveNotification = (notify) => {
+      const isForThisTeacher = notify.receiverId?.includes(teacherId); // direct to user
+      const isForTeachers = Array.isArray(notify.receiverType) && notify.receiverType.includes("teachers");
+      const isForStudentAndTeacher = Array.isArray(notify.receiverType) && notify.receiverType.length === 1 && notify.receiverType[0] === "students";
+
+      if (isForThisTeacher || (isForTeachers && !isForStudentAndTeacher)) {
+        playNotifyTone();
+        message.success("New notification received");
+        setNotifications(prev => [notify, ...prev]);
+        setUnreadCount(prev => prev + 1);
+      }
+    };
+
+    socket.on("receiveNotification", handleReceiveNotification);
+    return () => socket.off("receiveNotification", handleReceiveNotification);
+  }, []);
+
+
+  const handleMarkAllRead = async () => {
+    try {
+      await axios.put(`http://localhost:5000/api/read-all/${teacherId}`);
+      const updated = notifications.map(n => ({ ...n, readBy: true }));
+      setNotifications(updated);
+      setUnreadCount(0);
+      message.success("All notifications marked as read");
+    } catch (err) {
+      console.error("Error marking notifications as read:", err);
+      message.error("Failed to mark as read");
+    }
+  };
+
+  const getFallbackEmoji = (gender) => {
+    return gender === 'female' ? '👩' : '👨';
+  };
+
   const content = (
     <div style={{ width: 350, background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
       <div style={{
@@ -42,73 +80,81 @@ const TeacherNotify = () => {
         borderBottom: '1px solid #f0f0f0'
       }}>
         <Text strong>Notifications</Text>
-        <Space>
-          <Text type="secondary" style={{ cursor: 'pointer', fontSize: 12 }}>mark as read</Text>
-          <Text type="secondary" style={{ cursor: 'pointer', fontSize: 12 }}>clear all</Text>
-        </Space>
+        {unreadCount > 0 &&
+          <Space>
+            <Text type="secondary" style={{ cursor: 'pointer', fontSize: 12 }} onClick={handleMarkAllRead}>mark as read</Text>
+          </Space>}
       </div>
 
       <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-        <div style={{ padding: '8px 16px', backgroundColor: '#f5f5f5' }}>
-          <Text strong>NEW</Text>
-        </div>
-        {notificationData.filter(n => n.type === 'NEW').map(notification => (
-          <div key={notification.id} style={{
-            padding: '12px 16px',
-            borderBottom: '1px solid #f0f0f0',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '12px'
-          }}>
-            <Avatar size="large" src={notification.avatar} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 500 }}>{notification.name}</div>
-              <div style={{ color: '#888', fontSize: 12 }}>{notification.message}</div>
-              <div style={{ color: '#aaa', fontSize: 11, marginTop: 4 }}>{notification.time}</div>
+        {notifications.length === 0 ? (
+          <div style={{ padding: '16px', textAlign: 'center', color: '#aaa' }}>No notifications</div>
+        ) : (
+          notifications.map(notif => (
+            <div key={notif._id} style={{
+              padding: '12px 16px',
+              borderBottom: '1px solid #f0f0f0',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px',
+              backgroundColor: notif.readBy ? '#fff' : '#e6f7ff',
+              cursor: "pointer"
+            }}
+              onClick={() => {
+                if (notif.path === '/notification') {
+                  navigate('/teacher/notification')
+                } else {
+                  navigate(notif.path)
+                }
+              }
+              }
+            >
+              {
+                notif.senderId?.profileUrl ? (
+                  <Avatar size="large" src={notif.senderId.profileUrl} />
+                ) : (
+                  <Avatar size="large">
+                    {getFallbackEmoji(notif.senderId?.gender)}
+                  </Avatar>
+                )
+              }
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 500 }}>
+                  {notif.senderId?.role === 'teacher' ? 'Teacher' : 'System'}
+                </div>
+                <div style={{ color: '#888', fontSize: 12 }}>{notif.message}</div>
+                <div style={{ color: '#aaa', fontSize: 11, marginTop: 4 }}>
+                  {moment(notif.created_at).fromNow()}
+                </div>
+              </div>
+              {/* <CloseOutlined style={{ fontSize: 12, color: '#888', cursor: 'pointer' }} /> */}
             </div>
-            <CloseOutlined style={{ fontSize: 12, color: '#888', cursor: 'pointer' }} />
-          </div>
-        ))}
-
-        <div style={{ padding: '8px 16px', backgroundColor: '#f5f5f5' }}>
-          <Text strong>EARLIER</Text>
-        </div>
-        {notificationData.filter(n => n.type === 'EARLIER').map(notification => (
-          <div key={notification.id} style={{
-            padding: '12px 16px',
-            borderBottom: '1px solid #f0f0f0',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '12px'
-          }}>
-            <Avatar size="large" src={notification.avatar} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 500 }}>{notification.name}</div>
-              <div style={{ color: '#888', fontSize: 12 }}>{notification.message}</div>
-              <div style={{ color: '#aaa', fontSize: 11, marginTop: 4 }}>{notification.time}</div>
-            </div>
-            <CloseOutlined style={{ fontSize: 12, color: '#888', cursor: 'pointer' }} />
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
-      <div style={{
+      {/* <div style={{
         padding: '12px 16px',
         textAlign: 'center',
         borderTop: '1px solid #f0f0f0',
         cursor: 'pointer'
       }}>
         <Text type="primary">Show all</Text>
-      </div>
+      </div> */}
     </div>
   );
-
   return (
-    <Dropdown dropdownRender={() => content} trigger={['click']} placement="bottomRight" arrow>
-      <Badge count={notificationData.length} size="small">
-        <BellTwoTone twoToneColor="#1890ff" style={{ fontSize: 22, cursor: 'pointer' }} />
-      </Badge>
-    </Dropdown>
+    <>
+      <Dropdown
+        dropdownRender={() => content}
+        trigger={['click']}
+        placement={placement}
+      >
+        <Badge count={unreadCount > 99 ? '99+' : unreadCount} size="small">
+          <BellTwoTone twoToneColor="#1890ff" style={{ fontSize: 22, cursor: 'pointer' }} />
+        </Badge>
+      </Dropdown>
+    </>
   );
 };
 
