@@ -30,6 +30,7 @@ const PackageTablePage = () => {
       setLoading(true);
       const response = await axiosInstance.get('/getLatestVoucher');
       const data = response.data;
+      console.log(response.data)
       const formattedData = data.map((item) => ({
         ...item,
       }));
@@ -61,6 +62,7 @@ const PackageTablePage = () => {
   }, []);
 
   const handleStatusUpdate = async (data, newStatus) => {
+    console.log(data.packageId._id)
     try {
       setUpdatingId(data._id);
       await axiosInstance.put(`/updateVoucherStatus`, {
@@ -68,6 +70,7 @@ const PackageTablePage = () => {
         courseId: data.courseId?._id,
         status: newStatus,
         voucherId: data?._id,
+        packageId : data.packageId?._id,
         adminId : '681c8fc56329587244535343'
       });
 
@@ -287,6 +290,13 @@ const PackageTablePage = () => {
       dataIndex: 'fee',
       key: 'fee',
       render: (fee) => <Tag>Rs: {fee}</Tag>,
+      width: 160,
+    },
+      {
+      title: 'pendingMonth',
+      dataIndex: 'pendingMonth',
+      key: 'pendingMonth',
+      render: (pendingMonth) => <Tag color='cyan'>{pendingMonth}</Tag>,
       width: 160,
     },
     {

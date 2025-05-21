@@ -8,19 +8,19 @@ export default function FeePaymentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [messageApi, contextHolder] = message.useMessage();
-   const fetchPaymentData = async () => {
-      try {
-        setLoading(true);
-        const response = await axiosInstance.get('/getPackageByStudentId/681c8fdc6329587244535349');
-        setPaymentData(response.data || []);
-      } catch (err) {
-        console.error("Error fetching payment data:", err);
-        setError("Failed to load payment information");
-        showError("Failed to load payment data");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchPaymentData = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get('/getPackageByStudentId/681c8fdc6329587244535349');
+      setPaymentData(response.data || []);
+    } catch (err) {
+      console.error("Error fetching payment data:", err);
+      setError("Failed to load payment information");
+      showError("Failed to load payment data");
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     fetchPaymentData();
   }, []);
@@ -32,9 +32,9 @@ export default function FeePaymentPage() {
   const getStatusTag = (status) => {
     switch (status) {
       case 'completed':
-        return <Tag color="green" icon={<CheckCircle size={14} />}>Paid</Tag>;
+        return <Tag color="green" >Completed</Tag>;
       case 'inCompleted':
-        return <Tag color="orange" icon={<AlertCircle size={14} />}>Pending</Tag>;
+        return <Tag color="orange" >Incomplete</Tag>;
       default:
         return <Tag color="gray">Unknown</Tag>;
     }
@@ -73,7 +73,7 @@ export default function FeePaymentPage() {
       ) : paymentData.length === 0 ? (
         <div className="bg-blue-50 border border-blue-200 text-blue-700 p-6 rounded-lg text-center flex flex-col items-center">
           <Package className="h-10 w-10 mb-3" />
-          <p className="text-lg">No payment records found.</p>
+          <p className="text-lg">No fee records found.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -89,9 +89,9 @@ export default function FeePaymentPage() {
                     <h3 className="text-xl font-bold text-gray-800">
                       {payment.packageName || 'Course Package'}
                     </h3>
-                    <p className="text-sm text-gray-500">Course : {payment.courseId?.courseName || 'Unnamed Course'}</p>
+                    <p className="text-sm text-gray-500">Course: {payment.courseId?.courseName || 'Unnamed Course'}</p>
                   </div>
-                  {/* {getStatusTag(payment.paymentStatus)} */}
+                  {getStatusTag(payment.paymentStatus)}
                 </div>
 
                 <div className="mb-4 p-4 bg-gray-50 rounded-lg">
@@ -127,7 +127,7 @@ export default function FeePaymentPage() {
                   </div>
                   <div className={`text-sm font-medium ${payment.paymentStatus === 'inCompleted' ? 'text-red-500' : 'text-green-500'
                     }`}>
-                    {payment.daysRemainingText}
+                    {payment.monthStart === "1970-01-01T00:00:00.000Z" ? "Pay fee to start classes" : payment.daysRemainingText}
                   </div>
                 </div>
               </div>
