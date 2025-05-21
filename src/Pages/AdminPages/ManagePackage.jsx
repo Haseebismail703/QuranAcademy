@@ -11,12 +11,14 @@ const PackageManagement = () => {
   const [packages, setPackages] = useState([]);
   const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
-console.log(students)
+  const [loading,setLoading] =useState(false)
   let getCourseAndWaitingStudent = async () => {
     try {
+      setLoading(true)
       const Response = await axiosInstance.get("/getCourseAndWaitingStudent");
-      console.log(Response.data);
+      // console.log(Response.data);
       if (Response.status === 200) {
+        setLoading(false)
         setCourses(Response.data?.courses || []);
         setStudents(Response.data?.waitingStudents || []);
         console.log(Response.data);
@@ -24,6 +26,8 @@ console.log(students)
     } catch (error) {
       console.error(error);
       message.error(error.message || 'Something went wrong!');
+    }finally{
+      setLoading(false)
     }
 
 
@@ -47,8 +51,10 @@ console.log(students)
 
   let getPackageData = async () => {
     try {
+      setLoading(true)
       const response = await axiosInstance.get("/getAllPackages");
       console.log(response.data);
+      setLoading(false)
       if (response.status === 200) {
         const packageData = response.data?.data
           .map(pkg => ({
@@ -61,6 +67,8 @@ console.log(students)
     } catch (error) {
       console.error(error);
       message.error('Something went wrong!');
+    }finally{
+      setLoading(false)
     }
   };
 
@@ -259,6 +267,7 @@ console.log(students)
           pagination={{ pageSize: 5 }}
           className="custom-antd-table"
           scroll={{ x: "100%" }}
+          loading={loading}
         />
       </Card>
 

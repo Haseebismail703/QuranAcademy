@@ -21,15 +21,17 @@ const NotificationPage = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [viewModalVisible, setViewModalVisible] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
-
+  const [loader,setLoader] = useState(false)
   // Fetch notifications
   const fetchNotifications = async () => {
+    setLoader(true)
     try {
       const response = await axiosInstance.get("/getAllNotification");
       const data = response.data.map((item,index) => ({
         ...item,index 
       }));
-      console.log(data);
+      // console.log(data);
+      setLoader(false)
       setNotifications(data);
     } catch (err) {
       message.error("Failed to fetch notifications");
@@ -126,10 +128,10 @@ const NotificationPage = () => {
   ];
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6  min-h-screen">
       <div className="flex justify-between items-center mb-5 md:flex-row flex-col ">
-        <h1 className="text-2xl font-bold">Notifications</h1>
-        <Button type="primary" onClick={() => setCreateModalVisible(true)}>
+        <h1 className="text-2xl font-bold">All Notifications</h1>
+        <Button  type="primary" onClick={() => setCreateModalVisible(true)}>
           Send Notification
         </Button>
       </div>
@@ -141,6 +143,7 @@ const NotificationPage = () => {
         bordered
         className="bg-white shadow-md"
         scroll={{"x" : "100%"}}
+        loading={loader}
       />
 
       {/* Create Notification Modal */}

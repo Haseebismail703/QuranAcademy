@@ -10,6 +10,7 @@ import {
   Input,
   Select,
   Upload,
+  Tooltip,
 } from "antd";
 import {
   DownloadOutlined,
@@ -24,6 +25,7 @@ import {
   UserOutlined,
   PlusOutlined,
   UploadOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import axiosInstance from "../../Axios/axiosInstance";
 import { useParams } from "react-router-dom";
@@ -60,16 +62,60 @@ const AddResource = () => {
     }
   };
 
-  const getFileIcon = (type) => {
-    const typeLower = type?.toLowerCase();
-    if (typeLower?.includes("pdf")) return <FilePdfOutlined className="text-red-500" />;
-    if (typeLower?.includes("image")) return <FileImageOutlined className="text-green-500" />;
-    if (typeLower?.includes("word")) return <FileWordOutlined className="text-blue-500" />;
-    if (typeLower?.includes("excel") || typeLower?.includes("sheet"))
-      return <FileExcelOutlined className="text-green-600" />;
-    if (typeLower?.includes("zip") || typeLower?.includes("compressed"))
-      return <FileZipOutlined className="text-yellow-500" />;
-    return <FileOutlined className="text-gray-500" />;
+  // Enhanced file type detection
+  const getFileType = (url) => {
+    const urlLower = url?.toLowerCase();
+    if (urlLower?.endsWith('.pdf') || urlLower?.includes('/pdf/')) return 'pdf';
+    if (urlLower?.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/)) return 'image';
+    if (urlLower?.endsWith('.doc') || urlLower?.endsWith('.docx')) return 'word';
+    if (urlLower?.endsWith('.xls') || urlLower?.endsWith('.xlsx')) return 'excel';
+    if (urlLower?.endsWith('.zip') || urlLower?.endsWith('.rar')) return 'zip';
+    return 'other';
+  };
+
+  const getFileIcon = (url) => {
+    const type = getFileType(url);
+    switch (type) {
+      case 'pdf': return <FilePdfOutlined className="text-red-500" />;
+      case 'image': return <FileImageOutlined className="text-green-500" />;
+      case 'word': return <FileWordOutlined className="text-blue-500" />;
+      case 'excel': return <FileExcelOutlined className="text-green-600" />;
+      case 'zip': return <FileZipOutlined className="text-yellow-500" />;
+      default: return <FileOutlined className="text-gray-500" />;
+    }
+  };
+
+  // Enhanced download handler
+  const handleDownload = async (url, title) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+
+      // Set appropriate filename with extension
+      const fileType = getFileType(url);
+      const extension = url.split('.').pop().split('?')[0].toLowerCase();
+      let filename = title;
+
+      if (fileType === 'pdf' && !filename.toLowerCase().endsWith('.pdf')) {
+        filename += '.pdf';
+      } else if (!filename.includes('.')) {
+        // Only add extension if filename doesn't have one
+        filename += `.${extension}`;
+      }
+
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Download error:', error);
+      // Fallback to normal download
+      window.open(url, '_blank');
+    }
   };
 
   const handleUpload = async () => {
@@ -106,8 +152,6 @@ const AddResource = () => {
     }
   };
 
-
-
   useEffect(() => {
     getResources();
   }, [classId]);
@@ -115,7 +159,7 @@ const AddResource = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Spin size="large" tip="Loading resources..." />
+        <Spin size="large" />
       </div>
     );
   }
@@ -164,45 +208,52 @@ const AddResource = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {resources.map((res) => (
-                <Card
-                  key={res._id}
-                  className="border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 hover:border-blue-200"
-                  hoverable
-                >
-                  <div className="flex items-start mb-4">
-                    <div className="text-3xl mr-4">{getFileIcon(res.type)}</div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-800 truncate">
-                        {res.title}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {res.type} • {new Date(res.uploadedAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between mt-4">
-                    <a href={res.url} download className="flex-1 mr-2">
-                      <Button
-                        icon={<DownloadOutlined />}
-                        type="primary"
-                        className="w-full bg-blue-600 hover:bg-blue-700 border-blue-600"
+              {resources.map((res) => {
+                const isImage = getFileType(res.url) === 'image';
+                return (
+                  <div key={res._id}>
+                    <Tooltip title={isImage && "click to view image"}>
+                      <Card
+                        onClick={() => { isImage && window.open(res.url, '_blank') }}
+                        className="border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 hover:border-blue-200"
+                        hoverable
                       >
-                        Download
-                      </Button>
-                    </a>
-                    <Button
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={() => handleDelete(res._id)}
-                      className="flex-1 ml-2"
-                    >
-                      Delete
-                    </Button>
+                        <div className="flex items-start mb-4">
+                          <div className="text-3xl mr-4">{getFileIcon(res.url)}</div>
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-800 truncate">
+                              {res.title}
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                              {res.type} • {new Date(res.uploadedAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className={`flex justify-end mt-4`}>
+                          <div className="flex">
+                            <Button
+                              icon={<DownloadOutlined />}
+                              type="primary"
+                              className="bg-blue-600 hover:bg-blue-700 border-blue-600 mr-2"
+                              onClick={() => handleDownload(res.url, res.title)}
+                            >
+                              Download
+                            </Button>
+                            <Button
+                              danger
+                              icon={<DeleteOutlined />}
+                              onClick={() => handleDelete(res._id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    </Tooltip>
                   </div>
-                </Card>
-              ))}
+                );
+              })}
             </div>
           </>
         ) : (
@@ -261,7 +312,6 @@ const AddResource = () => {
             rules={[{ required: true, message: "Please upload a file" }]}
           >
             <Upload beforeUpload={() => false} maxCount={1}>
-
               <Button icon={<UploadOutlined />}>Select File</Button>
             </Upload>
           </Form.Item>

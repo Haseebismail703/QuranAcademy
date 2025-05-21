@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Input, Card, message, Tooltip, Empty, Select, Switch, Space, Avatar, Divider } from 'antd';
+import { Button, Modal, Form, Input, Card, message, Tooltip, Empty, Select, Switch, Space, Avatar, Divider, Spin } from 'antd';
 import { DeleteOutlined, EditOutlined, UserAddOutlined, ClockCircleOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../Axios/axiosInstance.js'
@@ -11,6 +11,7 @@ const ManageClass = () => {
     const [editingClass, setEditingClass] = useState(null);
     const [hoveredCardIndex, setHoveredCardIndex] = useState(null);
     const [courses, setCourses] = useState([]);
+    const [loading,setLoading] = useState(false)
     let navigate = useNavigate()
     const [classes, setClasses] = useState([]);
     const [singleClass, setSingleClass] = useState(null)
@@ -79,19 +80,23 @@ const ManageClass = () => {
     };
     // get the class 
     const fetchClasses = async () => {
+        setLoading(true)
         try {
             const res = await axiosInstance.get('/getAllClasses');
-            setClasses(res.data.classData);
+            setClasses(res.data?.classData);
+             setLoading(false)
             console.log('Classes fetched:', res.data.classData);
         } catch (error) {
             console.error('Error fetching classes:', error);
+        }finally{
+             setLoading(false)
         }
     };
     const getCourses = async () => {
         try {
             const res = await axiosInstance.get('/getAllCourses');
             //   console.log('Courses fetched:', res.data);
-            setCourses(res.data?.Courses);
+            setCourses(res.data?.courses);
         } catch (error) {
             console.error('Error fetching courses:', error);
             return [];
@@ -129,6 +134,13 @@ const ManageClass = () => {
         });
     };
 
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <Spin size="large" />
+            </div>
+        );
+    }
     return (
         <>
             <center>

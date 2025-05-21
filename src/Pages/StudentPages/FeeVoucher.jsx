@@ -27,7 +27,7 @@ const PaymentVoucher = () => {
       const response = await axiosInstance.get('/generate-voucher/681c8fdc6329587244535349/680c80cce7e608bd31fa9983/6821a56262f5812015504e11');
       console.log(response.data);
       setApiData(response.data);
-      
+
       // Check if there are newly created vouchers
       if (response.data.data?.newlyCreated?.length > 0) {
         setHasNewVouchers(true);
@@ -93,7 +93,9 @@ const PaymentVoucher = () => {
     setPreviewImage(url);
   };
 
-  if (loading) return <Loader text="Loading recipes..." />;
+  if (loading) return <div className="flex justify-center items-center h-[50vh]">
+    <div className="w-12 h-12 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+  </div>
   if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>;
   if (!apiData) return <div className="text-center py-8">No data available</div>;
 
@@ -144,10 +146,10 @@ const PaymentVoucher = () => {
                     </p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${recipe.status === 'approved'
-                      ? 'bg-green-100 text-green-800'
-                      : recipe.status === 'rejected'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-yellow-100 text-yellow-800'
+                    ? 'bg-green-100 text-green-800'
+                    : recipe.status === 'rejected'
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-yellow-100 text-yellow-800'
                     }`}>
                     {recipe.status.charAt(0).toUpperCase() + recipe.status.slice(1)}
                   </span>
@@ -215,11 +217,10 @@ const PaymentVoucher = () => {
                 <button
                   disabled={recipe.status === 'approved'}
                   onClick={() => handleEditRecipe(recipe)}
-                  className={`w-full px-4 py-2 rounded-md focus:outline-none text-sm font-medium transition-colors ${
-                    recipe.status === 'approved'
+                  className={`w-full px-4 py-2 rounded-md focus:outline-none text-sm font-medium transition-colors ${recipe.status === 'approved'
                       ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                       : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md'
-                  }`}
+                    }`}
                 >
                   {recipe.recipeUrl && recipe.recipeUrl !== "scs" ? 'Update Recipe' : 'Upload Recipe'}
                 </button>
@@ -253,8 +254,8 @@ const PaymentVoucher = () => {
       <Modal
         title={
           <div className="text-lg font-semibold text-gray-800">
-            {selectedRecipe?.recipeUrl && selectedRecipe.recipeUrl !== "scs" 
-              ? 'Update Voucher File' 
+            {selectedRecipe?.recipeUrl && selectedRecipe.recipeUrl !== "scs"
+              ? 'Update Voucher File'
               : 'Upload Voucher File'}
           </div>
         }
@@ -279,11 +280,10 @@ const PaymentVoucher = () => {
             key="submit"
             onClick={handleUpload}
             disabled={!file || uploading}
-            className={`px-4 py-2 rounded-md focus:outline-none font-medium transition-colors ${
-              file && !uploading
+            className={`px-4 py-2 rounded-md focus:outline-none font-medium transition-colors ${file && !uploading
                 ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md cursor-pointer'
                 : 'bg-blue-300 text-white cursor-not-allowed'
-            }`}
+              }`}
           >
             {uploading ? (
               <span className="flex items-center justify-center">
@@ -303,8 +303,8 @@ const PaymentVoucher = () => {
         ) : (
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {selectedRecipe?.recipeUrl && selectedRecipe.recipeUrl !== "scs" 
-                ? 'Update voucher file' 
+              {selectedRecipe?.recipeUrl && selectedRecipe.recipeUrl !== "scs"
+                ? 'Update voucher file'
                 : 'Upload voucher file (PDF, JPG, PNG)'}
             </label>
             <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">

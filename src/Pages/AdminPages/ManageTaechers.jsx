@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Table, Button, Modal, Form, Input, Switch, Space,
-  message, Tag, Avatar, Card
+  message, Tag, Avatar, Card, Spin
 } from 'antd';
 import {
   DeleteOutlined, EditOutlined, PlusOutlined,
@@ -14,8 +14,10 @@ const ManageTeachers = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState(null);
   const [teachers, setTeachers] = useState([]);
+  const [loading, setLoading] = useState(false); // Loader state
 
   const getTeacher = async () => {
+    setLoading(true);
     try {
       const response = await axiosInstance.get('/getAllTeacher');
       const data = response.data?.teachers?.map((teacher, index) => ({
@@ -29,10 +31,13 @@ const ManageTeachers = () => {
     } catch (error) {
       console.error('Error fetching teacher:', error);
       message.error(error.message || 'Failed to fetch teachers');
+    } finally {
+      setLoading(false);
     }
   };
 
   const createTeacher = async (teacherData) => {
+    setLoading(true);
     try {
       await axiosInstance.post('/signupUser', teacherData);
       message.success('Teacher created successfully');
@@ -41,11 +46,12 @@ const ManageTeachers = () => {
     } catch (error) {
       console.error('Error creating teacher:', error);
       message.error(error.message || 'Failed to create teacher');
+      setLoading(false);
     }
   };
 
   const updateTeacher = async (id, updatedData) => {
-    console.log('Updating teacher with ID:', id, 'Data:', updatedData);
+    setLoading(true);
     try {
       await axiosInstance.put(`/updateStatusAndFirstName/${id}`, updatedData);
       message.success('Teacher updated successfully');
@@ -54,6 +60,7 @@ const ManageTeachers = () => {
     } catch (error) {
       console.error('Error updating teacher:', error);
       message.error(error.message || 'Failed to update teacher');
+      setLoading(false);
     }
   };
 
@@ -162,15 +169,17 @@ const ManageTeachers = () => {
       </div>
 
       <Card className="rounded-xl shadow-sm border-0">
-        <Table
-          columns={columns}
-          dataSource={teachers}
-          pagination={{ pageSize: 5 }}
-          rowClassName="hover:bg-gray-50"
-          className="custom-antd-table"
-          scroll={{ x: '100%' }}
-          rowKey="_id"
-        />
+        <Spin spinning={loading}>
+          <Table
+            columns={columns}
+            dataSource={teachers}
+            pagination={{ pageSize: 5 }}
+            rowClassName="hover:bg-gray-50"
+            className="custom-antd-table"
+            scroll={{ x: '100%' }}
+            rowKey="_id"
+          />
+        </Spin>
       </Card>
 
       <Modal
@@ -181,6 +190,7 @@ const ManageTeachers = () => {
         okText={editingTeacher ? 'Update' : 'Create'}
         cancelText="Cancel"
         width={600}
+        confirmLoading={loading}
       >
         <Form form={form} layout="vertical" className="mt-6">
           <Form.Item

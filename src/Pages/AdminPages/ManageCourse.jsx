@@ -14,7 +14,7 @@ const ManageCourses = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [courses, setCourses] = useState([]);
-
+  const [loading,setloading] = useState(false)
   const themeOptions = [
     { value: 'blue', label: 'Blue Theme', color: '#3B82F6' },
     { value: 'green', label: 'Green Theme', color: '#10B981' },
@@ -108,17 +108,21 @@ const ManageCourses = () => {
 
 // get the course data 
   const getCourses = async () => {
+    setloading(true)
     try {
       const response = await axiosInstance.get('/getAllCourses');
-      // console.log('Courses:', response.data?.Courses);
-      let coursesData = response.data?.Courses.map((course, index) => ({
+      console.log('Courses:', response.data);
+      let coursesData = response.data?.courses.map((course, index) => ({
         ...course,
       }));
       // console.log('Courses Data:', coursesData);
       setCourses(coursesData || []);
+      setloading(false)
     } catch (error) {
       console.error('Error fetching courses:', error);
       message.error(error.message || 'Failed to fetch courses!');
+    }finally{
+      setloading(false)
     }
   };
 // delete course
@@ -180,11 +184,11 @@ const ManageCourses = () => {
     },
     {
       title: 'Students',
-      dataIndex: 'students',
+      dataIndex: 'totalStudents',
       key: 'students',
-      render: (students) => (
+      render: (totalStudents) => (
         <Tag color="blue" className="font-medium">
-          {students || 0 } Students
+          {totalStudents || 0 } Students
         </Tag>
       ),
     },
@@ -200,31 +204,39 @@ const ManageCourses = () => {
       key: 'updated_at',
       render: (date) => <span className="text-gray-500">{date?.substring(0, 10)}</span>,
     },
-    {
-      title: 'Action',
-      key: 'action',
-      render: (_, record) => (
-        <Space size="middle">
-          <Button
-            type="text"
-            icon={<EditOutlined className="text-blue-500" />}
-            onClick={() => showModal(record)}
-          />
-          <Popconfirm
-            title="Are you sure to delete this course?"
-            onConfirm={() => handleDelete(record._id)}
-            okText="Yes"
-            cancelText="No"
-            placement="topRight"
-          >
-            <Button
-              type="text"
-              icon={<DeleteOutlined className="text-red-500" />}
-            />
-          </Popconfirm>
-        </Space>
-      ),
-    },
+   {
+  title: 'Action',
+  key: 'action',
+  render: (_, record) => (
+    <Space size="middle">
+      <Button
+        type="primary"
+        className="bg-blue-500 hover:bg-blue-600 text-white border-none"
+        icon={<EditOutlined />}
+        onClick={() => showModal(record)}
+      >
+        Edit
+      </Button>
+      <Popconfirm
+        title="Are you sure to delete this course?"
+        onConfirm={() => handleDelete(record._id)}
+        okText="Yes"
+        cancelText="No"
+        placement="topRight"
+      >
+        <Button
+          type="primary"
+          danger
+          className="bg-red-500 hover:bg-red-600 text-white border-none"
+          icon={<DeleteOutlined />}
+        >
+          Delete
+        </Button>
+      </Popconfirm>
+    </Space>
+  ),
+}
+
   ];
 
   return (
@@ -250,6 +262,7 @@ const ManageCourses = () => {
           className="custom-antd-table"
           scroll={{ "x": "100%" }}
           rowKey={'_id'}
+          loading={loading}
         />
       </div>
 

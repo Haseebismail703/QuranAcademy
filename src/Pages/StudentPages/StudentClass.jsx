@@ -7,8 +7,9 @@ import { Tag, message } from "antd";
 export default function StudentClass() {
   const navigate = useNavigate();
   const [classes, setClasses] = useState([]);
-  const [notifications, setNotifications] = useState([]); // Store all notifications
-  const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
+  const [loadingClasses, setLoadingClasses] = useState(true);
+  const [loadingNotifications, setLoadingNotifications] = useState(true);
   const [error, setError] = useState(null);
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -17,16 +18,16 @@ export default function StudentClass() {
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        setLoading(true);
+        setLoadingClasses(true);
         const res = await axiosInstance.get(`/getAllClassesByStudentId/${studentId}`);
         setClasses(res.data || []);
-        console.log(res.data)
+        console.log(res.data);
       } catch (err) {
         console.error("Error fetching classes:", err);
         setError("Failed to load your classes. Please try again later.");
         showError("Failed to load classes");
       } finally {
-        setLoading(false);
+        setLoadingClasses(false);
       }
     };
 
@@ -36,16 +37,16 @@ export default function StudentClass() {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        setLoading(true);
+        setLoadingNotifications(true);
         const res = await axiosInstance.get(`/getClassNotification`);
-        setNotifications(res.data || []);  // Store all notifications here
-        console.log(res.data)
+        setNotifications(res.data || []);
+        console.log(res.data);
       } catch (err) {
         console.error("Error fetching notifications:", err);
         setError("Failed to load notifications. Please try again later.");
         showError("Failed to load notifications");
       } finally {
-        setLoading(false);
+        setLoadingNotifications(false);
       }
     };
 
@@ -82,6 +83,8 @@ export default function StudentClass() {
     return <Tag color={color}>{timing}</Tag>;
   };
 
+  const isLoading = loadingClasses || loadingNotifications;
+
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
       {contextHolder}
@@ -91,7 +94,7 @@ export default function StudentClass() {
         <h2 className="text-2xl md:text-3xl font-bold text-gray-800">My Classes</h2>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <div className="flex justify-center items-center h-64">
           <Loader2 className="animate-spin h-10 w-10 text-blue-500" />
           <span className="ml-3 text-gray-600">Loading your classes...</span>
@@ -109,20 +112,12 @@ export default function StudentClass() {
       ) : classes.length === 0 ? (
         <div className="bg-blue-50 border border-blue-200 text-blue-700 p-6 rounded-lg text-center">
           <p className="mb-4">You are not enrolled in any classes yet.</p>
-          <button
-            onClick={() => navigate('/classes')}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-          >
-            Browse Available Classes
-          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {classes.map((cls) => {
             const studentData = cls.students?.find(s => s.studentId === studentId) || {};
             const timing = studentData.studentTiming || cls.classTiming;
-
-            // Find notifications for the current class
             const noti = notifications.find(n => n.classId === cls._id);
 
             return (
@@ -130,7 +125,6 @@ export default function StudentClass() {
                 key={cls._id}
                 className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300 w-full"
               >
-                {/* Display Notification if available for the class */}
                 {noti && noti.message && (
                   <div className="bg-yellow-100 py-2 px-4 text-yellow-800 text-sm font-medium">
                     <marquee scrollamount="4">{noti.title} - {noti.message}</marquee>
@@ -159,7 +153,7 @@ export default function StudentClass() {
                   <div className="mt-6 flex flex-col sm:flex-row gap-3">
                     <button
                       onClick={() => handleSeeResources(cls._id)}
-                      className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                      className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer"
                     >
                       <BookOpen size={16} />
                       View Resources
@@ -168,9 +162,9 @@ export default function StudentClass() {
                     <button
                       onClick={() => handleCopyLink(cls._id)}
                       disabled={!studentData.classLink}
-                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors $(
+                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium  ${
                         studentData.classLink
-                          ? 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                          ? 'bg-gray-100 hover:bg-gray-200 text-gray-800 cursor-pointer'
                           : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       }`}
                     >

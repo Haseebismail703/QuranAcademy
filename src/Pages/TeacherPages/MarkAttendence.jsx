@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { Modal, Table, Select, Button, DatePicker, message, Tag } from 'antd';
+import { ClockCircleOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import dayjs from 'dayjs';
 
@@ -16,7 +17,7 @@ export default function AttendancePage() {
   const [attendanceData, setAttendanceData] = useState([]);
   const [date, setDate] = useState(dayjs());
   const [loading, setLoading] = useState(false);
-
+  const location = useLocation()?.state
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [addAttendanceDate, setAddAttendanceDate] = useState(dayjs());
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -132,92 +133,106 @@ export default function AttendancePage() {
   ];
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-2xl font-semibold mb-4">Student Attendance</h1>
-
-      <div className="flex items-center gap-4 mb-4">
-        <DatePicker
-          value={date}
-          onChange={(d) => setDate(d)}
-          disabledDate={(current) => current && current > dayjs().endOf('day')}
-        />
-        <Button type="primary" onClick={() => setAddModalVisible(true)}>
-          Add Attendance
-        </Button>
+    <>
+      <div className="text-center mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+          {location?.cls?.courseId?.courseName || 'Course Details'}
+        </h1>
+        <p className="text-gray-500 text-lg">
+          <ClockCircleOutlined className="mr-2" />
+          {location.cls?.classTiming || 'Timing not specified'}
+        </p>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={attendanceData}
-        pagination={false}
-        rowKey="key"
-        scroll={{ x: '100%' }}
-        loading={loading}
-        locale={{
-          emptyText: 'No attendance records found for this date',
-        }}
-      />
+      <div className="p-6  min-h-screen">
+        <h1 className="text-2xl font-semibold mb-4">Student Attendance</h1>
 
-      {/* Add Attendance Modal */}
-      <Modal
-        title="Add Attendance"
-        open={addModalVisible}
-        onCancel={() => setAddModalVisible(false)}
-        onOk={handleAddAttendance}
-        okText="Add"
-      >
-        <div className="flex flex-col gap-4">
-          <Select
-            placeholder="Select Student"
-            value={selectedStudent}
-            onChange={(val) => setSelectedStudent(val)}
-          >
-            {mockStudents.map((student) => (
-              <Option key={student.studentId} value={student.studentId}>
-                {student.name}
-              </Option>
-            ))}
-          </Select>
-
-          <Select
-            placeholder="Select Status"
-            value={selectedStatus}
-            onChange={(val) => setSelectedStatus(val)}
-          >
-            <Option value="Present">Present</Option>
-            <Option value="Absent">Absent</Option>
-            <Option value="Late">Late</Option>
-          </Select>
-
+        <div className="flex items-center gap-4 mb-4">
           <DatePicker
-            value={addAttendanceDate}
-            onChange={(d) => setAddAttendanceDate(d)}
+            value={date}
+            onChange={(d) => setDate(d)}
             disabledDate={(current) => current && current > dayjs().endOf('day')}
+            
           />
+          <Button type="primary" onClick={() => setAddModalVisible(true)}>
+            Add Attendance
+          </Button>
         </div>
-      </Modal>
 
-      {/* Update Attendance Modal */}
-      <Modal
-        title="Update Attendance"
-        open={updateModalVisible}
-        onCancel={() => setUpdateModalVisible(false)}
-        onOk={handleUpdateSave}
-        okText="Update"
-      >
-        <div className="flex flex-col gap-4">
-          <p><strong>Name:</strong> {selectedUpdateRecord?.name || 'Unknown'}</p>
-          <Select
-            value={updatedStatus}
-            onChange={(val) => setUpdatedStatus(val)}
-            className="w-full"
-          >
-            <Option value="Present">Present</Option>
-            <Option value="Absent">Absent</Option>
-            <Option value="Late">Late</Option>
-          </Select>
-        </div>
-      </Modal>
-    </div>
+        <Table
+          columns={columns}
+          dataSource={attendanceData}
+          pagination={false}
+          rowKey="key"
+          scroll={{ x: '100%' }}
+          loading={loading}
+          locale={{
+            emptyText: 'No attendance records found for this date',
+          }}
+        />
+
+        {/* Add Attendance Modal */}
+        <Modal
+          title="Add Attendance"
+          open={addModalVisible}
+          onCancel={() => setAddModalVisible(false)}
+          onOk={handleAddAttendance}
+          okText="Add"
+        >
+          <div className="flex flex-col gap-4">
+            <Select
+              placeholder="Select Student"
+              value={selectedStudent}
+              onChange={(val) => setSelectedStudent(val)}
+            >
+              {mockStudents.map((student) => (
+                <Option key={student.studentId} value={student.studentId}>
+                  {student.name}
+                </Option>
+              ))}
+            </Select>
+
+            <Select
+              placeholder="Select Status"
+              value={selectedStatus}
+              onChange={(val) => setSelectedStatus(val)}
+            >
+              <Option value="Present">Present</Option>
+              <Option value="Absent">Absent</Option>
+              <Option value="Late">Late</Option>
+            </Select>
+
+            <DatePicker
+              value={addAttendanceDate}
+              onChange={(d) => setAddAttendanceDate(d)}
+              disabledDate={(current) => current && current > dayjs().endOf('day')}
+            />
+          </div>
+        </Modal>
+
+        {/* Update Attendance Modal */}
+        <Modal
+          title="Update Attendance"
+          open={updateModalVisible}
+          onCancel={() => setUpdateModalVisible(false)}
+          onOk={handleUpdateSave}
+          okText="Update"
+        >
+          <div className="flex flex-col gap-4">
+            <p><strong>Name:</strong> {selectedUpdateRecord?.name || 'Unknown'}</p>
+            <Select
+              value={updatedStatus}
+              onChange={(val) => setUpdatedStatus(val)}
+              className="w-full"
+            >
+              <Option value="Present">Present</Option>
+              <Option value="Absent">Absent</Option>
+              <Option value="Late">Late</Option>
+            </Select>
+          </div>
+        </Modal>
+      </div>
+
+    </>
   );
 }
