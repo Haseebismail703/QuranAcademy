@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../Axios/axiosInstance';
 import { Modal, Spin, message } from 'antd';
-
-// Separate Loader Component
+import AcountDeatil from '../../assets/AccountDeatil.pdf'
 const Loader = ({ text = "Loading..." }) => (
   <div className="flex flex-col items-center justify-center py-8">
     <Spin size="large" />
@@ -20,6 +19,14 @@ const PaymentVoucher = () => {
   const [previewImage, setPreviewImage] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [hasNewVouchers, setHasNewVouchers] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+
+
+
+  const toggleVisibility = () => {
+    setIsVisible(isVisible == true ? false : true);
+    console.log(isVisible)
+  };
 
   const fetchData = async () => {
     try {
@@ -98,6 +105,9 @@ const PaymentVoucher = () => {
   const recipes = apiData.data?.vouchers || [];
 
   return (
+    <>
+    
+
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
@@ -115,6 +125,16 @@ const PaymentVoucher = () => {
               Packages Due: {apiData.data?.packagesDue || 0}
             </span>
           </div>
+        </div>
+
+        <div className="p-6 text-center">
+          <button
+            // onClick={toggleVisibility}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            <a href={AcountDeatil} download>
+            Download the account deatail in pdf</a>
+          </button>
         </div>
 
         {hasNewVouchers && (
@@ -156,7 +176,7 @@ const PaymentVoucher = () => {
                     <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                     </svg>
-                   Pending Month: {recipe.pendingMonth}
+                    Pending Month: {recipe.pendingMonth}
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
@@ -214,8 +234,8 @@ const PaymentVoucher = () => {
                   disabled={recipe.status === 'approved'}
                   onClick={() => handleEditRecipe(recipe)}
                   className={`w-full px-4 py-2 rounded-md focus:outline-none text-sm font-medium transition-colors ${recipe.status === 'approved'
-                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md'
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md'
                     }`}
                 >
                   {recipe.recipeUrl && recipe.recipeUrl !== "scs" ? 'Update Recipe' : 'Upload Recipe'}
@@ -277,8 +297,8 @@ const PaymentVoucher = () => {
             onClick={handleUpload}
             disabled={!file || uploading}
             className={`px-4 py-2 rounded-md focus:outline-none font-medium transition-colors ${file && !uploading
-                ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md cursor-pointer'
-                : 'bg-blue-300 text-white cursor-not-allowed'
+              ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md cursor-pointer'
+              : 'bg-blue-300 text-white cursor-not-allowed'
               }`}
           >
             {uploading ? (
@@ -376,6 +396,7 @@ const PaymentVoucher = () => {
         </div>
       </Modal>
     </div>
+     </>
   );
 };
 

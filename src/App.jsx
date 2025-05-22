@@ -26,14 +26,15 @@ import StudentDashboard from './Pages/StudentPages/StudentDashboard.jsx'
 import StudentClass from './Pages/StudentPages/StudentClass.jsx'
 import TeacherProfile from "./Pages/TeacherPages/TeacherProfile.jsx";
 import StudentProfile from './Pages/StudentPages/StudentProfile.jsx'
+import CareersPage from "./Pages/HomePages/Career.jsx";
 // auth
 import Login from './Pages/StudentPages/Login.jsx'
-import Register from './Pages/StudentPages/Register.jsx'
+import Register from './Pages/Auth/Register.jsx'
 import StudentResourses from "./Pages/StudentPages/StudentResourses.jsx";
 import StudentFee from "./Pages/StudentPages/StudentFee.jsx";
 import AdminProfile from "./Pages/AdminPages/AdminProfile.jsx";
 import FeeVoucher from "./Pages/StudentPages/FeeVoucher.jsx";
-import CareersPage from "./Pages/AdminPages/ManageCareer.jsx";
+import AllCareer from "./Pages/AdminPages/ManageCareer.jsx";
 import StudentNotification from "./Pages/StudentPages/StudentNotification.jsx";
 import TeacherNoti from "./Pages/TeacherPages/TeacherNoti.jsx";
 import AllVoucher from "./Pages/AdminPages/Allvoucher.jsx";
@@ -60,6 +61,7 @@ function App() {
           <Route path="/quran-memorization-hifz" element={<QuranMemorization />} />
           <Route path="/quran-course-for-kids" element={<QuranCourseForKids />} />
           <Route path="/learn-islamic-concepts" element={<LearnQuran />} />
+          <Route path="/career" element={<CareersPage />} />
 
 
           <Route path="/login" element={<Login />} />
@@ -82,7 +84,7 @@ function App() {
                   <Route path="manage-package" element={<ManagePackage />} />
                   <Route path="notification" element={<SendNotification />} />
                   <Route path="profile" element={<AdminProfile />} />
-                  <Route path="career" element={<CareersPage />} />
+                  <Route path="career" element={<AllCareer />} />
                   <Route path="allvoucher" element={<AllVoucher />} />
 
 
