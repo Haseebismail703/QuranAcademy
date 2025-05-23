@@ -14,7 +14,7 @@ export default function Notification({userId,role}) {
             setLoading(true);
 
             // Axios call to fetch notifications
-            const res = await axiosInstance.get(`/noti/${userId}/${role}`);
+            const res = await axiosInstance.get(`/api/noti/${userId}/${role}`);
 
             if (res.data.success) {
                 setNotifications(res.data.notifications);

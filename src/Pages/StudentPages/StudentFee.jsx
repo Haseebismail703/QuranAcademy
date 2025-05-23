@@ -1,17 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Calendar, DollarSign, Package, Loader2, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { Tag, message } from "antd";
 import axiosInstance from '../../Axios/axiosInstance';
+import { UserContext } from "../../Context/UserContext";
 
 export default function FeePaymentPage() {
   const [paymentData, setPaymentData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [messageApi, contextHolder] = message.useMessage();
+  const {userData} = useContext(UserContext)
+  console.log(userData)
   const fetchPaymentData = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get('/getPackageByStudentId/681c8fdc6329587244535349');
+      const response = await axiosInstance.get(`/api/getPackageByStudentId/${userData.id}`);
       setPaymentData(response.data || []);
     } catch (err) {
       console.error("Error fetching payment data:", err);

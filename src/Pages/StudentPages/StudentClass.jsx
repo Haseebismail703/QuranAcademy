@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from '../../Axios/axiosInstance.js';
 import { BookOpen, Link as LinkIcon, Clock, User, Loader2 } from "lucide-react";
 import { Tag, message } from "antd";
-
+import { UserContext } from "../../Context/UserContext.jsx";
 export default function StudentClass() {
   const navigate = useNavigate();
   const [classes, setClasses] = useState([]);
@@ -12,14 +12,14 @@ export default function StudentClass() {
   const [loadingNotifications, setLoadingNotifications] = useState(true);
   const [error, setError] = useState(null);
   const [messageApi, contextHolder] = message.useMessage();
-
-  const studentId = "681c8fdc6329587244535349";
+  const {userData} = useContext(UserContext)
+  const studentId = userData.id
 
   useEffect(() => {
     const fetchClasses = async () => {
       try {
         setLoadingClasses(true);
-        const res = await axiosInstance.get(`/getAllClassesByStudentId/${studentId}`);
+        const res = await axiosInstance.get(`/api/getAllClassesByStudentId/${studentId}`);
         setClasses(res.data || []);
         console.log(res.data);
       } catch (err) {
@@ -38,7 +38,7 @@ export default function StudentClass() {
     const fetchNotifications = async () => {
       try {
         setLoadingNotifications(true);
-        const res = await axiosInstance.get(`/getClassNotification`);
+        const res = await axiosInstance.get(`/api/getClassNotification`);
         setNotifications(res.data || []);
         console.log(res.data);
       } catch (err) {
@@ -56,7 +56,7 @@ export default function StudentClass() {
   const showSuccess = (msg) => messageApi.success(msg);
   const showError = (msg) => messageApi.error(msg);
 
-  const handleSeeResources = (classId) => navigate(`/student/class/resources/${classId}`);
+  const handleSeeResources = (classId) => navigate(`/api/student/class/resources/${classId}`);
 
   const handleCopyLink = (classId) => {
     const classData = classes.find(c => c._id === classId);

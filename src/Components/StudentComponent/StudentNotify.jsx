@@ -1,25 +1,27 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import { Bell, ChevronDown, Check, Link as LinkIcon } from "lucide-react";
-import axios from "axios";
+import axiosInstance from "../../Axios/axiosInstance.js";
 import socket from "../../utils/socket.js";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 import useSound from 'use-sound';
 import notifyTone from '../../assets/notify.wav'
 import moment from "moment";
+import { UserContext } from "../../Context/UserContext.jsx";
 const StudentNotify = () => {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const {userData} = useContext(UserContext)
   const [playNotifyTone] = useSound(notifyTone)
   const ref = useRef();
 
-  const userId = "681c8fdc6329587244535349";
+  const userId = userData.id;
   let navigate = useNavigate()
   // Fetch notifications from API
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/getNotify/${userId}`);
+      const res = await axiosInstance.get(`/api/getNotify/${userId}`);
       setNotifications(res.data);
       const unread = res.data.filter((n) => !n.readBy).length;
       setUnreadCount(unread);
@@ -34,8 +36,8 @@ const StudentNotify = () => {
   // Mark all notifications as read (PUT API call)
   const markAllAsRead = async () => {
     try {
-      let res = await axios.put(`http://localhost:5000/api/read-all/${userId}`);
-      console.log(res)
+      let res = await axiosInstance.put(`/api/read-all/${userId}`);
+      // console.log(res)
       setNotifications((prev) =>
         prev.map((n) => ({ ...n, readBy: true }))
       );

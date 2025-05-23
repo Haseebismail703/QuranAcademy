@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import axiosInstance from '../../Axios/axiosInstance.js';
 import {
   UserOutlined,
@@ -12,6 +12,7 @@ import {
   LoadingOutlined,
 } from '@ant-design/icons';
 import { Input, Button, message, Upload, Spin, Divider } from 'antd';
+import { UserContext } from '../../Context/UserContext.jsx';
 
 const QuranAcademyProfile = () => {
   const [tab, setTab] = useState('profile');
@@ -29,17 +30,17 @@ const QuranAcademyProfile = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
-
+  const { userData } = useContext(UserContext)
   useEffect(() => {
     setLoading(true);
     axiosInstance
-      .get('/getProfile/6809e7a4ba4ffa4f777954b9')
+      .get(`/api/getProfile/${userData.id}`)
       .then((response) => {
         setUser(response.data);
         setGender(response.data.gender);
       })
-      .catch(() => {
-        message.error('Failed to fetch user data');
+      .catch((error) => {
+        message.error(error);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -55,7 +56,7 @@ const QuranAcademyProfile = () => {
     }
 
     axiosInstance
-      .put('/updateUser/6809e7a4ba4ffa4f777954b9', formData, {
+      .put(`/api/updateUser/${userData.id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -63,8 +64,9 @@ const QuranAcademyProfile = () => {
       .then(() => {
         message.success('Profile updated successfully');
       })
-      .catch(() => {
-        message.error('Failed to update profile');
+      .catch((err) => {
+        message.error(err.response?.data?.message ||'Failed to update profile');
+        console.log(err)
       })
       .finally(() => setLoading(false));
   };
@@ -79,7 +81,7 @@ const QuranAcademyProfile = () => {
 
     setPasswordLoading(true);
     axiosInstance
-      .put('/update-password/6809e7a4ba4ffa4f777954b9', {
+      .put(`/update-password/${userData.id}`, {
         currentPassword: oldPassword,
         newPassword: newPassword,
       })
@@ -107,7 +109,7 @@ const QuranAcademyProfile = () => {
                   src={
                     imageFile
                       ? URL.createObjectURL(imageFile)
-                      : user.profileUrl || 'https://via.placeholder.com/100'
+                      : user.profileUrl || 'https://i.pravatar.cc/40?img=3'
                   }
                   alt="profile"
                   className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover transition-transform duration-300 group-hover:scale-105"
@@ -125,8 +127,8 @@ const QuranAcademyProfile = () => {
                     }}
                     accept="image/*"
                   >
-                    <Button 
-                      type="text" 
+                    <Button
+                      type="text"
                       icon={<UploadOutlined className="text-white" />}
                       className="!text-white !shadow-none"
                     />
@@ -146,11 +148,10 @@ const QuranAcademyProfile = () => {
               <button
                 key={item}
                 onClick={() => setTab(item)}
-                className={`capitalize px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  tab === item 
-                    ? 'bg-green-600 text-white shadow-md' 
+                className={`capitalize px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === item
+                    ? 'bg-green-600 text-white shadow-md'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 {item}
               </button>

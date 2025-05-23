@@ -1,7 +1,10 @@
 import { Menu } from "lucide-react";
 import StudentNotify from "../StudentNotify"; // Adjust path as needed
+import { useContext } from "react";
+import { UserContext } from "../../../Context/UserContext";
 
 export const Header = ({ toggleSidebar }) => {
+  const {userData} = useContext(UserContext)
   return (
     <header className="bg-white border-b border-gray-200 flex items-center justify-between p-4 sticky top-0 z-10 h-14">
       <div className="flex items-center">
@@ -15,12 +18,12 @@ export const Header = ({ toggleSidebar }) => {
         <StudentNotify />
         <div className="flex items-center space-x-2 ml-2">
           <img
-            src="https://i.pravatar.cc/40?img=3"
+            src={userData.profileUrl || "https://i.pravatar.cc/40?img=3"}
             alt="User Profile"
             className="h-8 w-8 rounded-full object-cover"
           />
           <span className="text-sm font-medium text-gray-800 hidden sm:inline">
-            Ahsan Khan
+            {userData.firstName}
           </span>
         </div>
       </div>

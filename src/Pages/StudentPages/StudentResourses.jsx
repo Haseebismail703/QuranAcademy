@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { FileDown, Eye, Image as ImageIcon } from "lucide-react";
 import axiosInstance from "../../Axios/axiosInstance";
 
+
 export default function StudentResources() {
   const { classId } = useParams();
   const [resources, setResources] = useState([]);
@@ -14,12 +15,12 @@ export default function StudentResources() {
       // Fetch the file
       const response = await fetch(url);
       const blob = await response.blob();
-      
+
       // Create download link
       const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = downloadUrl;
-      
+
       // Add appropriate extension based on file type
       if (isPDF(url)) {
         a.download = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
@@ -29,10 +30,10 @@ export default function StudentResources() {
       } else {
         a.download = filename;
       }
-      
+
       document.body.appendChild(a);
       a.click();
-      
+
       // Clean up
       a.remove();
       window.URL.revokeObjectURL(downloadUrl);
@@ -46,7 +47,7 @@ export default function StudentResources() {
   useEffect(() => {
     const fetchResources = async () => {
       try {
-        const res = await axiosInstance.get(`/getFilesByClassId/${classId}`);
+        const res = await axiosInstance.get(`/api/getFilesByClassId/${classId}`);
         setResources(res.data || []);
       } catch (err) {
         console.error("Error fetching resources:", err);
@@ -60,8 +61,8 @@ export default function StudentResources() {
 
   // Check if resource is PDF
   const isPDF = (url) => {
-    return url.toLowerCase().endsWith('.pdf') || 
-           (url.includes('cloudinary') && url.includes('/raw/'));
+    return url.toLowerCase().endsWith('.pdf') ||
+      (url.includes('cloudinary') && url.includes('/raw/'));
   };
 
   // Check if resource is an image
@@ -96,7 +97,7 @@ export default function StudentResources() {
               className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-blue-500 flex flex-col justify-between"
             >
               <h2 className="text-xl font-semibold mb-4">{res.title}</h2>
-              
+
               {/* Show appropriate preview based on file type */}
               {isImage(res.url) ? (
                 <img
@@ -115,7 +116,7 @@ export default function StudentResources() {
                   <span className="sr-only">Document</span>
                 </div>
               )}
-              
+
               <div className={`flex gap-2 mt-auto ${isImage(res.url) ? '' : 'justify-center'}`}>
                 {/* Show View button only for images */}
                 {isImage(res.url) && (
@@ -129,13 +130,12 @@ export default function StudentResources() {
                     View
                   </a>
                 )}
-                
+
                 {/* Download Button - handles all file types */}
                 <button
                   onClick={() => handleDownload(res.url, res.title)}
-                  className={`flex items-center justify-center cursor-pointer ${
-                    isImage(res.url) ? 'flex-1' : 'w-full'
-                  } bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-full transition-all duration-300`}
+                  className={`flex items-center justify-center cursor-pointer ${isImage(res.url) ? 'flex-1' : 'w-full'
+                    } bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-full transition-all duration-300`}
                 >
                   <FileDown className="mr-2" size={18} />
                   Download

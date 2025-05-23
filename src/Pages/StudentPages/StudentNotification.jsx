@@ -1,10 +1,12 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import Notification from '../../Components/Notifications/Notifications'
+import { UserContext } from '../../Context/UserContext'
 
 function StudentNotification() {
+  const {userData} = useContext(UserContext)
   return (
     <div>
-      <Notification userId={'681c8fdc6329587244535349'} role={'students'}/>
+      <Notification userId={userData.id} role={'students'}/>
     </div>
   )
 }
